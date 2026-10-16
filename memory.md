@@ -7,3 +7,5 @@
 
 - Recovery plus guarding can create long one-fighter endgames. Keep all-lineup knockout pacing checks when changing damage or recovery, and inspect per-team results rather than only aggregate wins.
 - Cancelled animation promises can settle after a new match starts. Guard both the UI continuation and effect cleanup with generation tokens; save combat before presentation begins.
+
+- Collector Crypt gacha inventory is not a sale listing. Use the exact asset page for availability; never label insured value as the purchase price. Preserve opaque inventory cursors unchanged and deduplicate by mint, not card definition.

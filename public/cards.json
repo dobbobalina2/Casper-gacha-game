@@ -136,5 +136,51 @@
       "observedAt": "2026-10-16",
       "mapping": "Card-number and family match; exact art variant unverified"
     }
+  },
+  {
+    "id": "SB02-010",
+    "name": "Trunks : Future",
+    "role": "Finishing striker",
+    "color": "Red",
+    "cost": 2,
+    "power": 5000,
+    "comboPower": 10000,
+    "family": "Fusion World",
+    "type": "BATTLE",
+    "statsSource": "https://www.dbs-cardgame.com/fw/en/cardlist/detail.php?card_no=SB02-010",
+    "verifiedAt": "2026-10-16",
+    "image": "/assets/SB02-010.webp",
+    "collectible": {
+      "mint": "XwKUZ7R3E857hKXukeK5dmc2pSNePwt45oPeHVthCef",
+      "name": "2025 #SB02-010 Trunks : Future P",
+      "description": "2025 #SB02-010 Trunks : Future PSA 10 Dragon Ball Super Card Game Fusion World Manga Booster 02",
+      "image": "https://d1xpxki1g4htqu.cloudfront.net/pZAkClAyRPkwIS6Bv9yBt9sHYVGN-r9dAb6b3PhgqwE",
+      "inventorySource": "https://gacha.collectorcrypt.com/api/getNfts?code=dragonball_50&limit=40",
+      "observedAt": "2026-10-16",
+      "mapping": "Card-number and family match; exact art variant unverified"
+    }
+  },
+  {
+    "id": "FB02-061",
+    "name": "Vegito",
+    "role": "Energy disruptor",
+    "color": "Blue",
+    "cost": 3,
+    "power": 25000,
+    "comboPower": 5000,
+    "family": "Fusion World",
+    "type": "BATTLE",
+    "statsSource": "https://www.dbs-cardgame.com/fw/en/cardlist/detail.php?card_no=FB02-061",
+    "verifiedAt": "2026-10-16",
+    "image": "/assets/FB02-061.webp",
+    "collectible": {
+      "mint": "3mtdGocQGg4D2cDfQP34vi765cUx2wuKf9nQfo7xeyY2",
+      "name": "2024 #FB02061 Vegito ALT ART SR/",
+      "description": "2024 #FB02061 Vegito ALT ART SR/(Ultimate Battle '24 Vol.2 Winner Prize) BGS 10 Dragon Ball Super Card Game Fusion World Promos",
+      "image": "https://d1xpxki1g4htqu.cloudfront.net/wVaIJgm0kQTX3oc149hVYskUDQL9zGeLn-Upw3hS4GM",
+      "inventorySource": "https://gacha.collectorcrypt.com/api/getNfts?code=dragonball_50&limit=40",
+      "observedAt": "2026-10-16",
+      "mapping": "Card-number and family match; exact art variant unverified"
+    }
   }
 ]

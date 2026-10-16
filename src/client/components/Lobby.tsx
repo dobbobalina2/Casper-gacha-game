@@ -1,6 +1,8 @@
 import type { CSSProperties } from "react";
 import type { Card } from "../../shared/types.ts";
 import { RULES, teamCost, validateTeam } from "../../shared/engine.ts";
+import { specialCost } from "../../shared/specials.ts";
+import { collectibleUrl } from "../collection.ts";
 
 export const short = (value: number) => `${value / 1000}K`;
 export const accentStyle = (name: string, value: string): CSSProperties => ({
@@ -77,6 +79,19 @@ function RosterCard({
           </div>
         </div>
       </button>
+      <div className="roster-special">
+        <span>✦ {c.special.name}</span>
+        <small>{specialCost(c)} ENERGY · ONCE / MATCH</small>
+      </div>
+      <a
+        className="card-shop"
+        href={collectibleUrl(c.collectible.mint)}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`View ${c.name} ${c.id} on Collector Crypt`}
+      >
+        View / buy card ↗
+      </a>
       <button className="card-source" onClick={() => onDetail(c)}>
         Card details &amp; sources <span>↗</span>
       </button>
@@ -113,6 +128,7 @@ export function Lobby({
             <span>3 vs 3</span>
             <span>TURN-BASED</span>
             <span>REAL CARD STATS</span>
+            <a href="#collection">LIVE COLLECTION ↓</a>
           </div>
         </div>
         <div className="hero-visual" aria-hidden="true">

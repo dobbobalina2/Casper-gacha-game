@@ -27,8 +27,8 @@ const strike: import("../src/shared/engine.ts").Action = {
 };
 
 test("roster has exact card identities, stats sources, null combos and local images", () => {
-  assert.equal(cards.length, 6);
-  assert.equal(new Set(cards.map((c) => c.id)).size, 6);
+  assert.equal(cards.length, 8);
+  assert.equal(new Set(cards.map((c) => c.id)).size, 8);
   for (const c of cards) {
     assert.equal(c.family, "Fusion World");
     assert.equal(c.type, "BATTLE");
@@ -100,7 +100,6 @@ test("illegal turns, targets, supports and insufficient energy are rejected with
     { ...strike, target: "missing" },
     { ...strike, fighter: "missing" },
     { type: "unknown" },
-    { type: "special", fighter: "FB05-030", target: "FB01-140" },
   ];
   for (const action of invalid)
     assert.throws(() => applyAction(state, "player", action));
@@ -182,7 +181,7 @@ test("bot completes matches legally for every valid roster combination", () => {
         assert.ok(state.move <= 60);
         count++;
       }
-  assert.equal(count, 9);
+  assert.equal(count, 36);
 });
 
 test("last surviving fighter recovers every own turn, including after a teammate knockout", () => {
@@ -201,12 +200,12 @@ test("last surviving fighter recovers every own turn, including after a teammate
     null,
   );
 });
-test("every ordered lineup pairing finishes by knockout within 32 turns", async () => {
+test("every ordered lineup pairing finishes by knockout within 36 turns", async () => {
   const { evaluate } = await import("../scripts/balance.ts");
   const result = evaluate();
-  assert.equal(result.matches, 81);
+  assert.equal(result.matches, 1296);
   assert.equal(result.limitFinishes, 0);
-  assert.ok(result.max! <= 32);
+  assert.ok(result.max! <= 36);
   assert.ok(result.median! <= 24);
   assert.ok(result.firstSeatWins / result.matches < 0.6);
   assert.ok(result.firstSeatWins / result.matches > 0.4);

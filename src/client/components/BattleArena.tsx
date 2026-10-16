@@ -9,6 +9,7 @@ import {
   type MatchState,
   type Side,
 } from "../../shared/engine.ts";
+import { specialCost } from "../../shared/specials.ts";
 import { short, accentStyle } from "./Lobby.tsx";
 
 interface Props {
@@ -83,6 +84,9 @@ function FighterCard({
       <div className="hp-track">
         <i style={{ width: `${c.hp}%` }} />
       </div>
+      <div className="fighter-special">
+        ✦ {c.special.name} · {c.specialUsed ? "USED" : "READY"}
+      </div>
       <div className="fighter-bottom">
         <span>{short(c.power)} PWR</span>
         <span>{attackCost(c)} ENERGY</span>
@@ -119,7 +123,13 @@ export function BattleArena({
     target: target?.id ?? "",
     support: support?.id ?? null,
   };
-  const error = actionError(state, "player", attack);
+  const special: Action = {
+    type: "special",
+    fighter: fighter?.id ?? "",
+    target: target?.id ?? "",
+  };
+  const error = actionError(state, "player", attack),
+    specialError = actionError(state, "player", special);
   const title = state.winner
     ? state.winner === "player"
       ? "VICTORY."
@@ -277,6 +287,30 @@ export function BattleArena({
               {fighter ? attackCost(fighter) + (support ? 1 : 0) : 0} energy ↗
             </span>
           </button>
+          <div
+            className="special-command"
+            style={accentStyle(
+              "--special-color",
+              fighter?.special.color ?? "#aaa",
+            )}
+          >
+            <p className="eyebrow">✦ SPECIAL · ONCE PER MATCH</p>
+            <button
+              className="button special-attack"
+              disabled={!mine || !!specialError}
+              onClick={() => act(special)}
+            >
+              {fighter?.special.name ?? "No ready fighter"}
+              <span>{fighter ? specialCost(fighter) : "—"} energy</span>
+            </button>
+            <p>{fighter?.special.description ?? "Choose a ready fighter."}</p>
+            <small>
+              {fighter?.specialUsed
+                ? "Already used this match"
+                : specialError ||
+                  `${damageFor(state, "player", special)} target damage · no combo support`}
+            </small>
+          </div>
           <button
             className="button secondary charge"
             disabled={!mine}

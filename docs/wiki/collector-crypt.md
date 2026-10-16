@@ -42,3 +42,7 @@ Do not use a local random draw to claim an actual collectible award. Keep partne
 A live read of [the public machine endpoint](https://gacha.collectorcrypt.com/api/machines) returned public machines with positive reported stock for Pokémon, One Piece, Riftbound, Dragonball, anime/pop culture, watches, and sports (including basketball, baseball, football, and soccer). Pokémon also included a sealed-product machine. The [public gacha site](https://gacha.collectorcrypt.com/) lists these broader categories.
 
 These are candidate themes, not a guarantee of partner access or purchase availability. Stock changes, and machine pools may overlap.
+
+## Implemented read-only browser and purchase handoff
+
+The v3 lobby now loads Dragon Ball pools in pages of 24, follows the opaque `nextCursor`, and labels only verified definitions as arena-ready. It links to exact `/assets/solana/<mint>` pages. Live marketplace verification found that the Piccolo asset offers Make an offer rather than a fixed-price purchase. See [arena v3](arena-v3.md) for the route, cache, validation, and acquisition limitations. This supersedes step 1 of the proposed sequence above; authenticated purchases remain deferred.

@@ -8,8 +8,7 @@
     "dev": "npm run build && node --import tsx scripts/serve.ts",
     "start": "npm run dev",
     "test": "node --import tsx --test tests/*.test.ts",
-    "check": "tsc --noEmit",
-    "balance": "node --import tsx scripts/balance.ts"
+    "check": "tsc --noEmit"
   },
   "dependencies": {
     "react": "^19.3.1",

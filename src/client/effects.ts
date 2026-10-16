@@ -1,7 +1,8 @@
 import type { Side } from "../shared/engine.ts";
+import type { Special } from "../shared/types.ts";
 
 export type CombatEvent = {
-  type: "charge" | "attack";
+  type: "charge" | "attack" | "special";
   side: Side;
   energy?: number;
   damage?: number;
@@ -11,6 +12,8 @@ export type CombatEvent = {
   fighter?: string;
   target?: string;
   support?: string | null;
+  special?: Special;
+  splashHits?: { id: string; damage: number; ko: boolean }[];
 };
 
 type EffectsOptions = {
@@ -130,7 +133,12 @@ export function createEffects({
     if (!enabled || !context || context.state !== "running") return;
     const t = context.currentTime;
     try {
-      if (event.type === "charge") {
+      if (event.special) {
+        for (const [delay, duration, from, to, type, level] of event.special
+          .notes)
+          tone(t + delay, duration, from, to, type, level);
+        if (event.ko) tone(t + 0.35, 0.25, 130, 30, "triangle", 0.22);
+      } else if (event.type === "charge") {
         tone(t, 0.32, 140, 520, "sine", 0.16);
         tone(t + 0.08, 0.3, 210, 780, "sine", 0.09);
       } else {
@@ -169,6 +177,174 @@ export function createEffects({
       } catch {}
     }
     nodes.clear();
+  }
+  function specialVisual(from: Element, to: Element, special: Special) {
+    const a = from.getBoundingClientRect(),
+      b = to.getBoundingClientRect(),
+      x = a.left + a.width / 2,
+      y = a.top + a.height / 2,
+      tx = b.left + b.width / 2,
+      ty = b.top + b.height / 2,
+      dx = tx - x,
+      dy = ty - y;
+    const shape = (
+      kind: string,
+      left: number,
+      top: number,
+      width: number,
+      height: number,
+      rotation = 0,
+    ) => {
+      const el = document.createElement("span");
+      el.className = "special-particle " + kind;
+      Object.assign(el.style, {
+        left: left + "px",
+        top: top + "px",
+        width: width + "px",
+        height: height + "px",
+        rotate: rotation + "rad",
+        color: special.color,
+        backgroundColor: special.color,
+      });
+      document.body.appendChild(el);
+      overlays.push(el);
+      return el;
+    };
+    const beam = (thickness: number, offset = 0) =>
+      shape(
+        "special-ray",
+        x + offset,
+        y,
+        Math.hypot(dx, dy),
+        thickness,
+        Math.atan2(dy, dx),
+      );
+    const ring = (radius: number, delay = 0) => {
+      const el = shape(
+        "special-ring",
+        tx - radius / 2,
+        ty - radius / 2,
+        radius,
+        radius,
+      );
+      animate(
+        el,
+        [
+          { opacity: 0, scale: ".2" },
+          { opacity: 0.8, offset: 0.35 },
+          { opacity: 0, scale: "1.5" },
+        ],
+        { duration: 600, delay },
+      );
+    };
+    if (special.visual === "wave") {
+      animate(
+        beam(24),
+        [
+          { opacity: 0, scale: "0 .2" },
+          { opacity: 1, scale: "1 1", offset: 0.45 },
+          { opacity: 0, scale: "1 .1" },
+        ],
+        { duration: 650 },
+      );
+      ring(100);
+    }
+    if (special.visual === "spiral") {
+      const ray = beam(8);
+      ray.style.background =
+        "repeating-linear-gradient(90deg," +
+        special.color +
+        " 0 12px,#fff 12px 20px)";
+      animate(
+        ray,
+        [
+          { opacity: 0, scale: "0 1" },
+          { opacity: 1, scale: "1 1", offset: 0.3 },
+          { opacity: 0, scale: "1 .3" },
+        ],
+        { duration: 600 },
+      );
+      ring(75);
+      ring(110, 80);
+    }
+    if (special.visual === "burst") {
+      for (const offset of [-15, 0, 15])
+        animate(
+          beam(10, offset),
+          [
+            { opacity: 0, scale: "0 1" },
+            { opacity: 1, scale: "1 1", offset: 0.45 },
+            { opacity: 0, scale: "1 0" },
+          ],
+          { duration: 620 },
+        );
+      ring(145);
+    }
+    if (["orb", "nova"].includes(special.visual)) {
+      const size = special.visual === "nova" ? 76 : 46,
+        orb = shape("special-orb", x - size / 2, y - size / 2, size, size);
+      animate(
+        orb,
+        [
+          { opacity: 0, transform: "scale(.2)" },
+          { opacity: 1, transform: "scale(1)", offset: 0.3 },
+          {
+            opacity: 1,
+            transform: "translate(" + dx + "px," + dy + "px) scale(1.2)",
+            offset: 0.75,
+          },
+          {
+            opacity: 0,
+            transform: "translate(" + dx + "px," + dy + "px) scale(2)",
+          },
+        ],
+        { duration: 720 },
+      );
+      ring(special.visual === "nova" ? 170 : 115, 100);
+    }
+    if (special.visual === "volley") {
+      for (let i = 0; i < 3; i++) {
+        const pellet = shape("special-orb", x - 6 + i * 10, y, 12, 12);
+        animate(
+          pellet,
+          [
+            { opacity: 1, transform: "translate(0,0)" },
+            {
+              opacity: 1,
+              transform: "translate(" + dx + "px," + dy + "px)",
+              offset: 0.8,
+            },
+            {
+              opacity: 0,
+              transform: "translate(" + dx + "px," + dy + "px) scale(2)",
+            },
+          ],
+          { duration: 380, delay: i * 100 },
+        );
+      }
+    }
+    if (["slash", "sword"].includes(special.visual)) {
+      for (let i = 0; i < (special.visual === "slash" ? 2 : 1); i++) {
+        const blade = shape(
+          "special-ray",
+          tx - 65,
+          ty + (i ? 30 : -30),
+          150,
+          special.visual === "sword" ? 12 : 5,
+          i ? -0.65 : 0.65,
+        );
+        animate(
+          blade,
+          [
+            { opacity: 0, scale: "0 1" },
+            { opacity: 1, scale: "1 1", offset: 0.4 },
+            { opacity: 0, scale: "1.2 .1" },
+          ],
+          { duration: 500, delay: i * 100 },
+        );
+      }
+      ring(100);
+    }
   }
   async function play(event: CombatEvent) {
     cancel();
@@ -210,6 +386,31 @@ export function createEffects({
       );
     };
     try {
+      if (event.special) {
+        const banner = document.createElement("div");
+        banner.className = "special-callout";
+        banner.textContent = event.special.name;
+        banner.style.color = event.special.color;
+        banner.setAttribute("aria-hidden", "true");
+        root.appendChild(banner);
+        overlays.push(banner);
+        animate(
+          banner,
+          reduced
+            ? [{ opacity: 1 }, { opacity: 0 }]
+            : [
+                { opacity: 0, transform: "translate(-50%,10px) scale(.9)" },
+                {
+                  opacity: 1,
+                  transform: "translate(-50%,0) scale(1)",
+                  offset: 0.2,
+                },
+                { opacity: 1, offset: 0.75 },
+                { opacity: 0, transform: "translate(-50%,-8px) scale(1.05)" },
+              ],
+          { duration: reduced ? 160 : 750 },
+        );
+      }
       if (event.type === "charge") {
         const fighters = [
           ...root.querySelectorAll(
@@ -258,7 +459,9 @@ export function createEffects({
               filter: event.ko ? "grayscale(1)" : "brightness(1)",
             },
           ]);
-          if (from && to) {
+          if (from && to && event.special)
+            specialVisual(from, to, event.special);
+          if (from && to && !event.special) {
             const a = from.getBoundingClientRect(),
               b = to.getBoundingClientRect(),
               x = a.left + a.width / 2,
@@ -286,6 +489,11 @@ export function createEffects({
             );
           }
         }
+        for (const hit of event.splashHits || [])
+          float(
+            card(event.side === "player" ? "bot" : "player", hit.id),
+            `−${hit.damage}${hit.ko ? " · KO" : ""}`,
+          );
         float(
           to,
           `${event.guarded ? "BLOCK · " : ""}−${event.damage}${event.ko ? " · KO" : ""}`,

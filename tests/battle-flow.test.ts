@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { createMatch } from "../src/shared/engine.ts";
+import { createMatch, type Action } from "../src/shared/engine.ts";
 import type { Card, Replay } from "../src/shared/types.ts";
 import { commitMove, presentMove } from "../src/client/battleFlow.ts";
 import type { CombatEvent } from "../src/client/effects.ts";
@@ -12,7 +12,7 @@ const cards = JSON.parse(
 const player = ["FB05-030", "SB02-043", "FB01-140"];
 const bot = ["FB05-119", "SB02-043", "FB05-030"];
 const replay: Replay = {
-  version: "arena-v2",
+  version: "arena-v3",
   playerIds: player,
   botIds: bot,
   actions: [],
@@ -39,7 +39,7 @@ test("legal actions persist and publish before asynchronous effects start", () =
   assert.equal(move.session.replay.actions.length, 1);
 });
 
-test("a stale animation completion cannot unlock a newer match", async () => {
+test("a stale animation completion cannot unlock or overwrite a newer match", async () => {
   const deferred: { resolve?: () => void } = {};
   let generation = 1;
   let unlocks = 0;

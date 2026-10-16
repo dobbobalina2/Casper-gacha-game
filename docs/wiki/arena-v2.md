@@ -1,5 +1,7 @@
 # Arena v2 — faster battles and combat feedback
 
+Historical pacing pass; extended by [arena v3](arena-v3.md).
+
 Implemented October 16, 2026. Replaces [arena v1](arena-v1.md); printed card stats and collectible references remain unchanged.
 
 ## Combat

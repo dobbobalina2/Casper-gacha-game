@@ -1,6 +1,6 @@
 # Dragon Ball arena research
 
-Initial research checked October 16, 2026. The local prototype now implements [arena v2](arena-v2.md); the evidence below records the initial discovery.
+Initial research checked October 16, 2026. The local prototype now implements [arena v3](arena-v3.md); the evidence below records the initial discovery.
 
 ## Inventory evidence
 
@@ -30,4 +30,4 @@ Recommended starting scope: a small Fusion World Battle-card roster, with power,
 
 Grade and market value remain collectible properties. Different graded copies of the same gameplay definition should have the same combat stats. Energy markers require a separate role or exclusion, not invented fighter stats.
 
-The initial turn and victory rules have now been implemented and playtested; see [arena v2](arena-v2.md) for the current scope and limitations.
+The initial turn and victory rules have now been implemented and playtested; see [arena v3](arena-v3.md) for the current scope and limitations.

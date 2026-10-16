@@ -6,6 +6,7 @@ import {
   type Side,
 } from "../shared/engine.ts";
 import type { Replay } from "../shared/types.ts";
+import { specialFor } from "../shared/specials.ts";
 import type { CombatEvent } from "./effects.ts";
 
 export interface BattleSession {
@@ -39,6 +40,14 @@ export function commitMove(
     action.type === "charge"
       ? undefined
       : match[other].fighters.find((fighter) => fighter.id === action.target);
+  const fighter =
+    action.type === "charge"
+      ? undefined
+      : current.match[side].fighters.find(
+          (entry) => entry.id === action.fighter,
+        );
+  const special =
+    action.type === "special" && fighter ? specialFor(fighter) : null;
   const event: CombatEvent =
     action.type === "charge"
       ? {
@@ -47,14 +56,27 @@ export function commitMove(
           energy: match[side].energy - current.match[side].energy,
         }
       : {
-          type: "attack",
+          ...action,
+          type: action.type,
           side,
-          fighter: action.fighter,
-          target: action.target,
-          support: action.type === "attack" ? (action.support ?? null) : null,
+          special: special ?? undefined,
+          splashHits: current.match[other].fighters.flatMap((before) => {
+            const after = match[other].fighters.find(
+              (entry) => entry.id === before.id,
+            )!;
+            return before.id !== action.target && after.hp < before.hp
+              ? [
+                  {
+                    id: before.id,
+                    damage: before.hp - after.hp,
+                    ko: after.hp === 0,
+                  },
+                ]
+              : [];
+          }),
           combo: action.type === "attack" && !!action.support,
           damage: damageFor(current.match, side, action),
-          guarded: current.match[other].guarded,
+          guarded: current.match[other].guarded && !special?.pierce,
           ko: afterTarget?.hp === 0,
         };
   const next: CommittedMove = {
@@ -82,7 +104,7 @@ export async function presentMove(
   try {
     await presenter.play(event);
   } catch {
-    /* Presentation cannot undo a legal move. */
+    // Presentation failures never undo a committed game action.
   }
   if (moveEpoch === currentEpoch()) unlock();
 }

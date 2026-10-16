@@ -1,4 +1,22 @@
 import type { Action } from "./engine.ts";
+export interface Special {
+  name: string;
+  description: string;
+  bonus: number;
+  extraEnergy: number;
+  pierce?: boolean;
+  rage?: number;
+  rageThreshold?: number;
+  execute?: number;
+  executeThreshold?: number;
+  splash?: number;
+  refund?: number;
+  drain?: number;
+  guard?: boolean;
+  visual: string;
+  color: string;
+  notes: [number, number, number, number, OscillatorType, number][];
+}
 export interface Card {
   id: string;
   name: string;
@@ -21,6 +39,7 @@ export interface Card {
     observedAt: string;
     mapping: string;
   };
+  special: Special;
 }
 export interface Replay {
   version: string;
