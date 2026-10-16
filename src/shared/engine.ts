@@ -1,4 +1,5 @@
 import type { Card } from "../contracts/catalog.ts";
+import type { Replay } from "../contracts/battles.ts";
 import { specialFor, specialCost } from "./specials.ts";
 
 export type Side = "player" | "bot";
@@ -23,19 +24,9 @@ export type Action =
   | { type: "attack"; fighter: string; target: string; support?: string | null }
   | { type: "special"; fighter: string; target: string };
 export type ActionInput = unknown;
-export type Replay = {
-  version: typeof RULES.version;
-  catalogRevision: string;
-  playerIds: string[];
-  botIds: string[];
-  actions: Action[];
-};
-export type ReplayInput = {
+export type ReplayInput = Omit<Replay, "catalogRevision" | "version"> & {
   version: string;
   catalogRevision?: string;
-  playerIds: string[];
-  botIds: string[];
-  actions: unknown[];
 };
 
 function isAction(value: unknown): value is Action {

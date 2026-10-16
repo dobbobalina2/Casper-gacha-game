@@ -4,9 +4,9 @@ Implemented October 16, 2026. Supersedes the static catalog and Node proxy descr
 
 ## Runtime
 
-A Cloudflare Worker serves the browser bundle and two read-only HTTP endpoints. `GET /api/catalog` reads D1 using Drizzle, validates the assembled roster with Zod, and returns `{revision, cards}`. The browser validates that response again. There is no fallback to a JavaScript stat map or public JSON catalog. Missing or invalid catalog data returns 503 with a retry message.
+A Cloudflare Worker serves the browser bundle, two read-only catalog endpoints, and the account endpoints documented separately. `GET /api/catalog` reads D1 using Drizzle, validates the assembled roster with Zod, and returns `{revision, cards}`. The browser validates that response again. There is no fallback to a JavaScript stat map or public JSON catalog. Missing or invalid catalog data returns 503 with a retry message.
 
-The database contains four tables:
+The catalog uses four tables. Account, session and battle tables are documented in [Google login and battle saves](accounts-and-battles.md):
 
 | Table | Contents |
 | --- | --- |
@@ -17,9 +17,9 @@ The database contains four tables:
 
 Foreign keys protect reference identities. Database checks reject invalid core stats. Zod additionally validates allowed visuals, safe URLs, audio bounds, unique identities, exact official source card numbers, and usable energy costs. Custom specials remain separate from official printed stats. Prices, grades, rarity and ownership are not inputs to battle strength.
 
-`GET /api/inventory` accepts only the three Dragon Ball pool codes and a bounded opaque cursor. The Worker validates upstream responses and persists a 60-second cache capped at 20 pages. Expired observations are not served as live data; upstream failures remain retryable. Loading inventory never creates a playable definition. API writes are not exposed. Admin changes use authenticated Wrangler migrations.
+`GET /api/inventory` accepts only the three Dragon Ball pool codes and a bounded opaque cursor. The Worker validates upstream responses and persists a 60-second cache capped at 20 pages. Expired observations are not served as live data; upstream failures remain retryable. Loading inventory never creates a playable definition. Catalog writes are not exposed. Authenticated battle saves have a separate API. Catalog admin changes use authenticated Wrangler migrations.
 
-Saved battles include a SHA-256 revision of the validated catalog. A different revision or old replay without a revision resets only the match, retaining the lineup. An active match keeps the catalog loaded when its page opened; refreshed pages receive current data. This is still local practice, not an authoritative multiplayer game server. Teams, audio preferences and match actions remain in browser local storage.
+Saved battles include a SHA-256 revision and an immutable catalog snapshot. Account saves are validated by replaying legal actions on the server. Resuming uses that snapshot even after the catalog changes. Teams and audio preferences remain browser-local; account battles persist in D1. This is practice, not an authoritative multiplayer game server.
 
 ## Database and environments
 

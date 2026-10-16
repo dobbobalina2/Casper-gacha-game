@@ -15,6 +15,13 @@
       "when": 1792190099217,
       "tag": "0001_catalog",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1792192598009,
+      "tag": "0002_pale_changeling",
+      "breakpoints": true
     }
   ]
 }

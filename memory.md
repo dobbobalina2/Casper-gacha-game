@@ -10,6 +10,9 @@
 
 - Collector Crypt gacha inventory is not a sale listing. Use the exact asset page for availability; never label insured value as the purchase price. Preserve opaque inventory cursors unchanged and deduplicate by mint, not card definition.
 
-- Changing database-backed stats can change deterministic replay outcomes. Bind saved matches to the validated catalog revision and retain the lineup when rejecting an outdated match.
+- Changing database-backed stats can change deterministic replay outcomes. Bind saved matches to the validated catalog revision and retain the immutable stat snapshot for resume. Older saves without a compatible snapshot must fail closed.
 - Wrangler local D1 and remote D1 have separate state. Explicitly verify the database binding and migration target; a successful local migration is not evidence of a remote migration.
 - In this environment Wrangler remote D1 bindings in a local Worker failed with `Network connection lost`, while `wrangler dev --remote` served the same D1 queries successfully. Use the authenticated remote preview for cloud-backed local QA; keep ordinary `npm run dev` local.
+
+- A session cookie can change while another tab has queued battle writes. Bind requests to the expected user ID as well as the authenticated session, and use a revision check to prevent overwriting another tab. Keep failed local branches separately.
+- Better Auth with Drizzle D1 requires `transaction: false`, `nodejs_compat`, and the complete core schema, including an ID and unique key on the database rate-limit table. Test the OAuth callback in the Worker runtime, not just URL generation.

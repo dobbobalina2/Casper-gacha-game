@@ -4,8 +4,4 @@ import { App } from "./App.tsx";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Missing application root");
-createRoot(root).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+createRoot(root).render(<StrictMode><App /></StrictMode>);

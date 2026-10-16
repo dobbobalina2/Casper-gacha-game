@@ -38,6 +38,7 @@ before(async () => {
       modules: true,
       scriptPath: "dist/worker.js",
       compatibilityDate: "2026-10-01",
+      compatibilityFlags: ["nodejs_compat"],
       d1Databases: { DB: "test-casper" },
       outboundService: (request) => {
         assert.equal(
