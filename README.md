@@ -1,22 +1,20 @@
 # Casper — Gacha Game
 
-A quick collectible game exploring gacha-style reveals and collection building.
+A quick Dragon Ball card arena built around actual Collector Crypt collectibles.
 
 ## Direction
 
-Build around actual Collector Crypt collectibles through their API. Pokémon or another supported collectible collection remains under consideration.
-
-Current priority: choose the game concept. The pack-opening loop below is an option to discuss, not an implementation decision.
+The user selected Card Arena with Dragon Ball. Use Collector Crypt for collectible data and verified ownership, and match eligible cards to official gameplay stats. Detailed battle rules remain proposals.
 
 ## Proposed first playable
 
-1. Browse an actual Collector Crypt collection.
-2. Enter the pack-opening flow once the integration mode is selected.
-3. Reveal the collectible awarded by Collector Crypt.
-4. Show verified holdings in the player's collection.
-5. Track collection progress.
+1. Choose three eligible Dragon Ball fighters.
+2. Enter a short turn-based match against a bot.
+3. Choose attacks, support combos, or energy recovery.
+4. Use verified power, combo power, and cost within Casper's simplified rules.
+5. Review the result and try another lineup.
 
-This is a starting proposal, not a finalized game design. Pokémon and other themes remain options.
+This is a proposed battle loop. See [the arena research](docs/wiki/dragon-ball-arena.md) for a verified stat example and open decisions. Gacha acquisition can follow the battle design.
 
 ## Status
 

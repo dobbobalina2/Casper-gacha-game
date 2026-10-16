@@ -1,42 +1,46 @@
 # Product brief
 
-## User direction
+## Confirmed direction
 
-- Project: Casper, a gacha game.
-- Build a quick game around collectible collections.
-- Pokémon or another collectible theme is under consideration.
-- Use actual Collector Crypt collectibles through their API, as confirmed by the user.
+- Project: Casper.
+- Game concept: Card Arena.
+- Collection: Dragon Ball, using actual Collector Crypt collectibles through their API.
+- Investigate the cards' existing gameplay stats as the basis for combat.
 
-## Proposed prototype scope
+## Proposed first playable
 
-Current priority: decide what game Casper should be before choosing an implementation or purchase flow. The pack-opening proposal below is provisional, not a selected concept. Explore collection quests, short card battles, and an arcade with collectibles as possible directions.
+Three fighters per side in a short turn-based match against a bot. Players choose when to attack, commit a supporting card to a combo, or recover energy. Target two to three minutes per match, subject to playtesting.
 
-A browser game with one Collector Crypt collection, a pack-opening reveal, rarity indicators, and a view of the player's verified holdings. Begin with real inventory browsing, then implement the chosen pack flow against the development environment before production transactions.
+Use verified official power, combo power, and cost as inputs. Casper's energy economy, damage calculation, victory condition, and support cooldowns are custom rules still to design. Avoid automatic wins from simply selecting the highest printed power; test a team cost budget and meaningful costs for supporting attacks.
 
-Collector Crypt is the source of collectible data and award results. Casper supplies the game interface. Local presentation state must not be treated as proof that a player owns a collectible. Any simulated preview must be explicitly labeled and kept separate from actual holdings.
+Start with a small, verified Fusion World roster. This is a recommendation based on the inventory sample, not a decision to support every Dragon Ball card family. See [stat research](wiki/dragon-ball-arena.md).
 
-Keep the collection data separate from the reveal and binder behavior so the initial theme can be changed without rewriting the game loop.
+Practice cards can represent real catalog entries without granting ownership; label that mode clearly. Actual collection-based play must verify holdings before team selection. Ownership verification has not been implemented.
 
-These are proposed defaults, not approved product requirements.
+## Data responsibilities
 
-## Decisions before implementation
+- Collector Crypt: collectible identity, images, inventory, and eventual acquisition and ownership integration.
+- Official card catalog: game family, card number, type, printed stats, and abilities.
+- Casper: explicitly versioned arena rules and any ability adaptations.
 
-- Which collection and artwork should the first version use?
-- Should purchases use the wallet-based API or the invoiced partner API? See [API research](wiki/collector-crypt.md).
-- Is opening and collecting the whole game, or should collected items also be used in a playable challenge?
-- Which partner API access is available for the selected integration?
+Keep these records separate. Collectible grade, price, and gacha prize tier do not set combat power. Do not guess stats when a match is ambiguous. A collectible asset and its card definition are distinct identities; multiple physical copies may share one definition.
 
-Public inventory access has been verified. Authentication, purchase, award, and ownership flows still need implementation and verification.
+## Open design decisions
 
-## Proposed first-playable acceptance criteria
+- Exact turn sequence, energy rules, damage calculation, and victory condition.
+- Team budget and duplicate-card policy.
+- Which printed abilities can be adapted coherently to three-card play.
+- Practice access and how verified ownership affects competitive access.
+- Multiplayer and pack purchasing scope after the battle prototype.
 
-- A player can browse real inventory and complete the selected development pack flow.
-- Displayed odds and award results come from the selected Collector Crypt machine.
-- The collection view reflects verified holdings, keyed by asset identity.
-- Refreshing during a pack opening resumes the existing operation without creating another purchase.
-- The pack-opening and binder controls work on mobile and desktop.
-- Development transactions and simulated previews are clearly identified in the interface.
+## Proposed first-playable checks
 
-## Current implementation
+- Every playable card has a verified family, number, type, and stat source.
+- Unsupported cards and energy markers cannot silently become fighters.
+- Players can complete a bot match with understandable legal moves and a visible result.
+- The same battle state and actions resolve consistently.
+- Practice access never implies ownership or transfers a collectible.
 
-No application code yet. Collector Crypt is the confirmed data source. Technology stack, mechanics, integration mode, and release destination remain open.
+## Current status
+
+Concept and collection selected. Twelve Dragon Ball inventory records inspected; one card definition matched to official stats. No application, battle engine, authenticated integration, or deployment exists yet.

@@ -2,7 +2,7 @@
 
 ## Confirmed direction
 
-Casper uses actual Collector Crypt collectibles. The initial collection and gameplay beyond pack opening remain undecided.
+Casper uses actual Collector Crypt collectibles. The selected game is a Dragon Ball card arena; see [the arena research](dragon-ball-arena.md).
 
 ## Documentation reviewed on October 16, 2026
 
@@ -28,7 +28,7 @@ This verifies inventory access at the time of the check, not continued availabil
 
 ## Proposed implementation sequence
 
-Deferred until the game concept is selected.
+This acquisition sequence is deferred while Dragon Ball battle rules and stat mapping are established. It is not the immediate implementation plan.
 
 1. Build an inventory browser with the actual returned images and metadata.
 2. Choose the wallet or invoiced integration and configure its credentials server-side.
