@@ -6,6 +6,8 @@ A quick collectible game exploring gacha-style reveals and collection building.
 
 Build around actual Collector Crypt collectibles through their API. Pokémon or another supported collectible collection remains under consideration.
 
+Current priority: choose the game concept. The pack-opening loop below is an option to discuss, not an implementation decision.
+
 ## Proposed first playable
 
 1. Browse an actual Collector Crypt collection.

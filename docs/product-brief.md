@@ -9,6 +9,8 @@
 
 ## Proposed prototype scope
 
+Current priority: decide what game Casper should be before choosing an implementation or purchase flow. The pack-opening proposal below is provisional, not a selected concept. Explore collection quests, short card battles, and an arcade with collectibles as possible directions.
+
 A browser game with one Collector Crypt collection, a pack-opening reveal, rarity indicators, and a view of the player's verified holdings. Begin with real inventory browsing, then implement the chosen pack flow against the development environment before production transactions.
 
 Collector Crypt is the source of collectible data and award results. Casper supplies the game interface. Local presentation state must not be treated as proof that a player owns a collectible. Any simulated preview must be explicitly labeled and kept separate from actual holdings.
