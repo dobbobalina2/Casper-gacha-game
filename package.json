@@ -18,7 +18,7 @@
     "check": "tsc",
     "balance": "node --import tsx scripts/balance.ts",
     "dev:cloud": "npm run build && wrangler dev --remote",
-    "deploy": "npm run build && wrangler deploy --env=\"\"",
+    "deploy": "npm run build && wrangler deploy",
     "db:migrate:remote": "wrangler d1 migrations apply DB --remote"
   },
   "engines": {

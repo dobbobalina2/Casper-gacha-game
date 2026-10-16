@@ -3,7 +3,9 @@
   "name": "casper-gacha-game",
   "main": "src/worker.ts",
   "compatibility_date": "2026-10-01",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "assets": {
     "directory": "./dist/client",
     "binding": "ASSETS",
@@ -23,5 +25,10 @@
     "ip": "127.0.0.1",
     "port": 4317
   },
-  "account_id": "5576346053b20f27278255cb8f602b12"
+  "account_id": "5576346053b20f27278255cb8f602b12",
+  "workers_dev": true,
+  "preview_urls": false,
+  "vars": {
+    "BETTER_AUTH_URL": "https://casper-gacha-game.jfkiii.workers.dev"
+  }
 }

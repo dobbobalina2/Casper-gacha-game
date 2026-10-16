@@ -2,6 +2,8 @@
 
 A playable three-versus-three practice arena using actual Collector Crypt collectible images and verified Fusion World card stats.
 
+Play the [public demo](https://casper-gacha-game.jfkiii.workers.dev). Guest practice is live, and production Google login is configured. See the [deployment runbook](docs/wiki/deployment.md).
+
 ## Run
 
 Requires Node.js 22 or newer. Install dependencies first; the local database persists in `.wrangler/state/`.

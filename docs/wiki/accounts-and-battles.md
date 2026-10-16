@@ -19,7 +19,7 @@ npm run db:migrate:remote  # Dedicated Casper cloud D1
 npm run dev:cloud          # Local URL backed by real D1
 ```
 
-For a future hosted deployment, set a new HTTPS `BETTER_AUTH_URL`, register its exact callback in Google and configure Worker secrets through Wrangler. Deployment is not part of this change. Do not copy the loopback URL into production.
+The public site is now deployed. Its HTTPS base URL and remaining production Google configuration are documented in the [deployment runbook](deployment.md). Local credentials remain in `.dev.vars`; production secrets are configured separately.
 
 ## Storage and authentication
 
@@ -51,6 +51,6 @@ Browser backups are partitioned by authenticated user ID. A guest replay is neve
 
 All 49 tests passed, including an isolated Worker/D1 OAuth exchange with a test RSA-signed Google ID token, PKCE/state cookies, encrypted token storage, two users, session revocation/expiry, origin checks, input bounds, legal-action validation, revision conflicts, immutable snapshots and completed results. Queue tests cover late acknowledgements, offline retry, retained conflicts and stopping writes on account changes. Client tests cover guest refresh recovery, explicit guest import, separation between users and storage failure. Strict TypeScript and frontend syntax checks passed.
 
-The additive migration was applied to local and dedicated cloud D1. The running cloud preview reported login enabled and generated a Google authorization URL with the exact callback, state and PKCE. The login controls were visible in the browser. Live browser QA subsequently verified real Google sign-in, sign-out, guest separation/import, unfinished and completed battle resume, exact refresh recovery, two-tab conflicts and a real preview-proxy interruption. That interruption exposed a lost-acknowledgement recovery issue; the fix was retested against the retained live save. See the [feature QA results](feature-qa-2026-10-16.md). No production deployment or authenticated collectible-ownership integration is included.
+The additive migration was applied to local and dedicated cloud D1. The running cloud preview reported login enabled and generated a Google authorization URL with the exact callback, state and PKCE. The login controls were visible in the browser. Live browser QA subsequently verified real Google sign-in, sign-out, guest separation/import, unfinished and completed battle resume, exact refresh recovery, two-tab conflicts and a real preview-proxy interruption. That interruption exposed a lost-acknowledgement recovery issue; the fix was retested against the retained live save. See the [feature QA results](feature-qa-2026-10-16.md). Production deployment, real Google sign-in and live account-save verification are documented in the [deployment runbook](deployment.md). Authenticated collectible-ownership integration is not included.
 
 References: [Better Auth Google provider](https://better-auth.com/docs/authentication/google), [Drizzle adapter](https://better-auth.com/docs/adapters/drizzle), [session management](https://better-auth.com/docs/concepts/session-management).

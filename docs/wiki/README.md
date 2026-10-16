@@ -1,5 +1,6 @@
 # Casper project wiki
 
+- [Public deployment and Google production setup](deployment.md)
 - [Project overview](../../README.md)
 - [Product direction and open decisions](../product-brief.md)
 - [Collector Crypt API research and live inventory check](collector-crypt.md)
