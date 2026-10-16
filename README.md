@@ -4,7 +4,7 @@ A playable three-versus-three practice arena using actual Collector Crypt collec
 
 ## Historical stage and React client
 
-This snapshot starts from commit `1d8abaf` (D1-backed catalog and typed catalog contracts). Its catalog, worker, migrations, seed data, and original tests are retained. The client is the current React/TypeScript interface adapted to this stage; battles and the selected lineup are saved locally in the browser. It has no sign-in or cloud battle saves. The later Better Auth dependency-only stage is `47d2249`.
+This snapshot starts from commit `47d2249`, the dependency-only Better Auth addition on top of `1d8abaf`. Its catalog, worker, migrations, seed data, and original tests are retained. The client is the current React/TypeScript interface adapted to this stage; battles and the selected lineup are saved locally in the browser. The historical dependency remains in the manifest, but this stage has no sign-in or cloud battle saves.
 
 ## Run
 
