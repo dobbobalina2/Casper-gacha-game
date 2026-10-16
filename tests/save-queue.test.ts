@@ -45,3 +45,21 @@ test("offline branches remain durable and can be flushed again", async () => {
   await queue.flush();
   assert.equal(stored?.dirty, false);
 });
+test("explicit retry unblocks a retained conflict", async () => {
+  let conflict = true;
+  let stored: SaveRecord | undefined;
+  const queue = createSaveQueue({
+    persist: (item) => { stored = structuredClone(item); },
+    send: async () => {
+      if (conflict) throw Object.assign(new Error("conflict"), { status: 409 });
+      return { revision: 1 };
+    },
+  });
+  queue.enqueue(record());
+  await queue.flush();
+  assert.equal(stored?.blocked, true);
+  conflict = false;
+  await queue.retry();
+  assert.equal(stored?.blocked, false);
+  assert.equal(stored?.dirty, false);
+});

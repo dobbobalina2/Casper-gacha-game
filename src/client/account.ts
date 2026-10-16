@@ -8,6 +8,7 @@ import {
 } from "../contracts/battles.ts";
 import { catalogSchema, type Card } from "../contracts/catalog.ts";
 import { createSaveQueue } from "./save-queue.ts";
+import { saveWithRecovery } from "./battle-sync.ts";
 
 const localSaveSchema = z.object({
   id: z.uuid(),
@@ -276,17 +277,29 @@ export function createAccount({
             )
               setStatus(message);
           },
-          send: async (record) =>
-            battleSummarySchema.parse(
-              await request(
-                `/api/battles/${encodeURIComponent(record.id)}`,
-                {
-                  method: "PUT",
-                  headers: { "X-Casper-User": userId },
-                  body: JSON.stringify({ revision: record.revision, replay: record.replay }),
-                },
-              ),
-            ),
+          send: (record) =>
+            saveWithRecovery(record, {
+              get: async () =>
+                battleSchema.parse(
+                  await request(
+                    `/api/battles/${encodeURIComponent(record.id)}`,
+                    {
+                      headers: { "X-Casper-User": userId },
+                    },
+                  ),
+                ),
+              put: async (revision) =>
+                battleSummarySchema.parse(
+                  await request(
+                    `/api/battles/${encodeURIComponent(record.id)}`,
+                    {
+                      method: "PUT",
+                      headers: { "X-Casper-User": userId },
+                      body: JSON.stringify({ revision, replay: record.replay }),
+                    },
+                  ),
+                ),
+            }),
         });
       }
       setStatus(
@@ -324,7 +337,7 @@ export function createAccount({
       if (disposed) return;
       if (name === "battles") return showBattles();
       if (name === "retry") {
-        if (queue) await queue.flush();
+        if (queue) await queue.retry();
         else
           setStatus(
             "Guest battles are saved on this browser. Sign in for cloud saves.",

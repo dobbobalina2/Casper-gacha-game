@@ -185,6 +185,68 @@ test("guest storage failure is visible and never claims a successful backup", as
   app.account.dispose();
 });
 
+test("a pending recovery keeps its captured account header after sign-out", async () => {
+  const app = fixture({ id: "alice", name: "Alice" });
+  await app.account.init();
+  let releaseRead: ((response: Response) => void) | undefined;
+  let markRead: (() => void) | undefined;
+  const readStarted = new Promise<void>((resolve) => {
+    markRead = resolve;
+  });
+  const delayedRead = new Promise<Response>((resolve) => {
+    releaseRead = resolve;
+  });
+  const writeHeaders: Array<string | null> = [];
+  let id = "";
+  let writes = 0;
+  app.setFetch(async (input, init) => {
+    const url = String(input);
+    if (url === "/api/auth/sign-out") return Response.json({ success: true });
+    if (/\/api\/battles\/[0-9a-f-]+$/i.test(url) && init?.method === "PUT") {
+      id = url.split("/").at(-1) ?? "";
+      writes += 1;
+      writeHeaders.push(new Headers(init.headers).get("X-Casper-User"));
+      if (writes === 1)
+        return Response.json({ error: "Newer save" }, { status: 409 });
+      return Response.json({
+        id,
+        revision: 3,
+        status: "in_progress",
+        result: null,
+        moves: 0,
+        updatedAt: Date.now(),
+        playerIds: replay.playerIds,
+      });
+    }
+    if (id && url.endsWith(`/api/battles/${id}`) && init?.method !== "PUT") {
+      markRead?.();
+      return delayedRead;
+    }
+    throw new Error(`Unexpected request: ${url}`);
+  });
+  // Activate a deterministic battle identity so the intercepted requests match it.
+  app.account.newBattle();
+  app.account.save(replay, seedCards);
+  await readStarted;
+  await app.account.action("logout");
+  releaseRead?.(
+    Response.json({
+      id,
+      revision: 2,
+      status: "in_progress",
+      result: null,
+      moves: 0,
+      updatedAt: Date.now(),
+      playerIds: replay.playerIds,
+      replay,
+      catalog: seedCards,
+    }),
+  );
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual(writeHeaders, ["alice", "alice"]);
+  app.account.dispose();
+});
+
 test("disposing during account initialization does not start a session lookup or emit later snapshots", async () => {
   const app = fixture();
   let releaseStatus: ((response: Response) => void) | undefined;

@@ -81,6 +81,15 @@ export function createSaveQueue({
       void flush();
     },
     flush,
+    retry(): Promise<void> {
+      for (const record of records.values()) {
+        if (record.blocked) {
+          record.blocked = false;
+          store(record);
+        }
+      }
+      return flush();
+    },
     stop(): void { stopped = true; },
   };
 }
