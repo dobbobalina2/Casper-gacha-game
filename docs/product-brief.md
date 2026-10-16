@@ -5,11 +5,13 @@
 - Project: Casper, a gacha game.
 - Build a quick game around collectible collections.
 - Pokémon or another collectible theme is under consideration.
-- Clarify whether “collector crypt” means an integration with Collector Crypt.
+- Use actual Collector Crypt collectibles through their API, as confirmed by the user.
 
 ## Proposed prototype scope
 
-A browser game with one small collection, a pack-opening reveal, rarity indicators, and a binder showing collected items and duplicates. Use demo credits and placeholder collectible data while the theme and integration are decided. Save prototype progress locally.
+A browser game with one Collector Crypt collection, a pack-opening reveal, rarity indicators, and a view of the player's verified holdings. Begin with real inventory browsing, then implement the chosen pack flow against the development environment before production transactions.
+
+Collector Crypt is the source of collectible data and award results. Casper supplies the game interface. Local presentation state must not be treated as proof that a player owns a collectible. Any simulated preview must be explicitly labeled and kept separate from actual holdings.
 
 Keep the collection data separate from the reveal and binder behavior so the initial theme can be changed without rewriting the game loop.
 
@@ -17,22 +19,22 @@ These are proposed defaults, not approved product requirements.
 
 ## Decisions before implementation
 
-- Is the game using actual Collector Crypt collectibles or a standalone catalog?
 - Which collection and artwork should the first version use?
+- Should purchases use the wallet-based API or the invoiced partner API? See [API research](wiki/collector-crypt.md).
 - Is opening and collecting the whole game, or should collected items also be used in a playable challenge?
-- Does the first version need accounts, wallets, or shared progress?
+- Which partner API access is available for the selected integration?
 
-Any live integration needs its actual interface and collectible data verified before implementation.
+Public inventory access has been verified. Authentication, purchase, award, and ownership flows still need implementation and verification.
 
 ## Proposed first-playable acceptance criteria
 
-- A player can open a demo pack and see the result.
-- Published demo rarity probabilities match the selection logic.
-- Results appear in the binder, including duplicate counts.
-- Progress survives a page refresh.
+- A player can browse real inventory and complete the selected development pack flow.
+- Displayed odds and award results come from the selected Collector Crypt machine.
+- The collection view reflects verified holdings, keyed by asset identity.
+- Refreshing during a pack opening resumes the existing operation without creating another purchase.
 - The pack-opening and binder controls work on mobile and desktop.
-- Demo items and credits are clearly identified in the interface.
+- Development transactions and simulated previews are clearly identified in the interface.
 
 ## Current implementation
 
-None. Technology stack, mechanics, data source, and release destination remain open.
+No application code yet. Collector Crypt is the confirmed data source. Technology stack, mechanics, integration mode, and release destination remain open.
