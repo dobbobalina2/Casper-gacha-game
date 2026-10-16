@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import cardsJson from "../../public/cards.json";
 import {
-  applyAction,
   chooseBotAction,
   createMatch,
   restoreMatch,
@@ -12,6 +11,8 @@ import {
   type MatchState,
 } from "../shared/engine.ts";
 import type { Card, Replay } from "../shared/types.ts";
+import { createEffects, type CombatEvent } from "./effects.ts";
+import { commitMove, presentMove, type BattleSession } from "./battleFlow.ts";
 import { Lobby } from "./components/Lobby.tsx";
 import { BattleArena } from "./components/BattleArena.tsx";
 const cards = cardsJson as Card[];
@@ -26,7 +27,15 @@ function App() {
     [replay, setReplay] = useState<Replay | null>(null),
     [dialog, setDialog] = useState<Card | "rules" | "leave" | null>(null),
     [notice, setNotice] = useState(""),
-    [resolving, setResolving] = useState(false);
+    [presentation, setPresentation] = useState<{
+      event: CombatEvent;
+      epoch: number;
+    } | null>(null);
+  const resolving = presentation !== null;
+  const effects = useRef<ReturnType<typeof createEffects> | null>(null);
+  const session = useRef<BattleSession | null>(null);
+  const epoch = useRef(0);
+  const locked = useRef(false);
   const restored = useMemo(() => {
     try {
       const value = localStorage.getItem(saveKey);
@@ -38,24 +47,48 @@ function App() {
     }
   }, []);
   useEffect(() => {
+    const root = document.getElementById("root"),
+      sound = document.getElementById("sound-button"),
+      volume = document.getElementById("sound-volume");
+    if (
+      root instanceof HTMLElement &&
+      sound instanceof HTMLButtonElement &&
+      volume instanceof HTMLInputElement
+    )
+      effects.current = createEffects({
+        root,
+        soundButton: sound,
+        volumeInput: volume,
+      });
+    return () => {
+      epoch.current++;
+      effects.current?.cancel();
+      effects.current?.dispose();
+    };
+  }, []);
+  useEffect(() => {
+    session.current = null;
     if (!restored) return;
+    const savedSelection = restored.selected;
     const validSelection =
-      Array.isArray(restored.selected) &&
-      restored.selected.length <= 3 &&
-      new Set(restored.selected).size === restored.selected.length &&
-      restored.selected.every(
+      Array.isArray(savedSelection) &&
+      savedSelection.length <= 3 &&
+      new Set(savedSelection).size === savedSelection.length &&
+      savedSelection.every(
         (id) => typeof id === "string" && cards.some((card) => card.id === id),
       ) &&
       teamCost(
-        restored.selected.map((id) => cards.find((card) => card.id === id)!),
+        savedSelection.map((id) => cards.find((card) => card.id === id)!),
       ) <= 14;
     setSelected(
-      validSelection ? restored.selected : ["FB05-030", "SB02-043", "FB01-140"],
+      validSelection ? savedSelection : ["FB05-030", "SB02-043", "FB01-140"],
     );
     if (restored.replay) {
       try {
+        const match = restoreMatch(restored.replay, cards);
+        session.current = { match, replay: restored.replay };
         setReplay(restored.replay);
-        setState(restoreMatch(restored.replay, cards));
+        setState(match);
       } catch {
         localStorage.removeItem(saveKey);
       }
@@ -72,6 +105,30 @@ function App() {
     setNotice(text);
     window.setTimeout(() => setNotice(""), 3000);
   }
+  function pick(id: string) {
+    setSelected((current) => {
+      if (current.includes(id)) return current.filter((item) => item !== id);
+      if (current.length >= 3) {
+        notify("Choose up to three fighters.");
+        return current;
+      }
+      const candidate = cards.find((card) => card.id === id);
+      const chosen = current
+        .map((entry) => cards.find((card) => card.id === entry)!)
+        .filter(Boolean);
+      if (!candidate || teamCost([...chosen, candidate]) > 14) {
+        notify("That lineup exceeds the 14-cost team budget.");
+        return current;
+      }
+      return [...current, id];
+    });
+  }
+  function resetPresentation() {
+    epoch.current++;
+    locked.current = false;
+    effects.current?.cancel();
+    setPresentation(null);
+  }
   function savePractice(nextSelected: string[], nextReplay: Replay | null) {
     try {
       localStorage.setItem(
@@ -79,72 +136,102 @@ function App() {
         JSON.stringify({ selected: nextSelected, replay: nextReplay }),
       );
     } catch {
-      setNotice("Browser storage is unavailable.");
+      notify("Browser storage is unavailable.");
     }
   }
-  function pick(id: string) {
-    setSelected((current) =>
-      current.includes(id)
-        ? current.filter((item) => item !== id)
-        : current.length >= 3
-          ? (notify("Choose up to three fighters."), current)
-          : (() => {
-              const candidate = cards.find((card) => card.id === id);
-              const team = current
-                .map((item) => cards.find((card) => card.id === item)!)
-                .filter(Boolean);
-              if (!candidate || teamCost([...team, candidate]) > 14) {
-                notify("That lineup exceeds the 14-cost team budget.");
-                return current;
-              }
-              return [...current, id];
-            })(),
-    );
-  }
   function start() {
-    const botIds = ["FB01-140", "SB02-043", "FB09-012"],
+    const error = validateTeam(selected, cards);
+    if (error) {
+      notify(error);
+      return;
+    }
+    resetPresentation();
+    const botIds = ["FB05-119", "SB02-043", "FB05-030"],
       save: Replay = {
-        version: "arena-v1",
+        version: "arena-v2",
         playerIds: [...selected],
         botIds,
         actions: [],
       };
     const match = createMatch(selected, botIds, cards);
+    const next = { match, replay: save };
+    session.current = next;
     savePractice(selected, save);
     setReplay(save);
     setState(match);
   }
-  async function act(action: Action) {
-    if (!state || !replay || resolving) return;
+  function act(action: Action) {
+    const current = session.current;
+    if (!current || locked.current || current.match.winner) return;
+    const actionEpoch = epoch.current;
     try {
-      const before = state,
-        next = applyAction(before, before.turn, action),
-        side = before.turn;
-      const nextReplay = { ...replay, actions: [...replay.actions, action] };
-      savePractice(selected, nextReplay);
-      setResolving(true);
-      setState(next);
-      setReplay(nextReplay);
-      setResolving(false);
+      locked.current = true;
+      commitMove(
+        current,
+        action,
+        (next) => {
+          session.current = next;
+          savePractice(selected, next.replay);
+        },
+        ({ session: next, event }) => {
+          setState(next.match);
+          setReplay(next.replay);
+          setPresentation({ event, epoch: actionEpoch });
+        },
+      );
     } catch (error) {
+      locked.current = false;
       notify(error instanceof Error ? error.message : "Move rejected.");
-    } finally {
-      setResolving(false);
     }
   }
-  useEffect(() => {
-    if (!state || state.turn !== "bot" || state.winner || resolving) return;
-    const timer = window.setTimeout(
-      () => void act(chooseBotAction(state)),
-      700,
+  useLayoutEffect(() => {
+    if (!presentation) return;
+    let active = true;
+    const presenter = effects.current;
+    if (!presenter) {
+      locked.current = false;
+      setPresentation(null);
+      return;
+    }
+    void presentMove(
+      presenter,
+      presentation.event,
+      presentation.epoch,
+      () => epoch.current,
+      () => {
+        if (active) {
+          locked.current = false;
+          setPresentation(null);
+        }
+      },
     );
+    return () => {
+      active = false;
+    };
+  }, [presentation]);
+  useEffect(() => {
+    if (!state || state.turn !== "bot" || state.winner || presentation) return;
+    const moveEpoch = epoch.current;
+    const timer = window.setTimeout(() => {
+      const current = session.current;
+      if (
+        moveEpoch === epoch.current &&
+        current &&
+        current.match.turn === "bot" &&
+        !current.match.winner &&
+        !locked.current
+      )
+        act(chooseBotAction(current.match));
+    }, 350);
     return () => window.clearTimeout(timer);
-  }, [state, resolving]);
+  }, [state, presentation]);
   function leave() {
-    savePractice(selected, null);
+    resetPresentation();
+    session.current = null;
     setState(null);
     setReplay(null);
     setDialog(null);
+    savePractice(selected, null);
   }
   return (
     <>
@@ -154,6 +241,19 @@ function App() {
         </a>
         <div className="header-right">
           <span className="practice">PRACTICE MODE</span>
+          <div className="sound-controls">
+            <button id="sound-button" className="text-button">
+              Sound on
+            </button>
+            <input
+              id="sound-volume"
+              type="range"
+              min="0"
+              max="100"
+              defaultValue="35"
+              aria-label="Sound volume"
+            />
+          </div>
           <button className="text-button" onClick={() => setDialog("rules")}>
             How to play ↗
           </button>
@@ -182,7 +282,7 @@ function App() {
         )}
       </main>
       <footer>
-        <span>CASPER / ARENA 001</span>
+        <span>CASPER / ARENA 002</span>
         <p>
           Practice with real collectible references. No ownership, purchases, or
           prizes.
@@ -210,7 +310,7 @@ function App() {
             </button>
             {dialog === "rules" ? (
               <>
-                <p className="eyebrow">THE RULES / ARENA V1</p>
+                <p className="eyebrow">THE RULES / ARENA V2</p>
                 <h2>Three fighters. Every move matters.</h2>
                 <p>
                   Build a team within 14 cost. Attack, add combo support, or

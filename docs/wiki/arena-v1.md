@@ -1,5 +1,7 @@
 # Arena v1
 
+Historical rules; superseded by [arena v2](arena-v2.md).
+
 ## Implemented behavior
 
 The local prototype has six Fusion World Battle-card definitions, with images and collectible references from two Collector Crypt inventory samples. Select three different definitions with printed cost totaling at most 14. Two different Son Goku definitions may be selected together. The bot fields Gohan FB01-140, Piccolo SB02-043, and Cheelai FB09-012.

@@ -11,7 +11,7 @@
 
 Three fighters per side in a short turn-based match against a bot. Players choose when to attack, commit a supporting card to a combo, or recover energy. Target two to three minutes per match, subject to playtesting.
 
-The implemented v1 uses verified official power, combo power, and cost as inputs, with custom energy, damage, victory, and recovery rules. See [the exact rules and verification](wiki/arena-v1.md). A team cost budget and support costs are implemented; competitive balance is not established.
+The implemented v2 uses verified official power, combo power, and cost as inputs, with custom energy, damage, victory, and recovery rules. See [the exact rules and verification](wiki/arena-v2.md). A team cost budget and support costs are implemented; competitive balance is not established.
 
 The first roster contains six verified Fusion World definitions. Other Dragon Ball card families are not supported. See [stat research](wiki/dragon-ball-arena.md).
 
@@ -27,7 +27,7 @@ Keep these records separate. Collectible grade, price, and gacha prize tier do n
 
 ## Open design decisions
 
-- Balance and pacing adjustments to the implemented v1 rules.
+- Further lineup and initiative balance after the v2 pacing pass.
 - Which printed abilities can be adapted coherently to three-card play.
 - Practice access and how verified ownership affects competitive access.
 - Multiplayer and pack purchasing scope after the battle prototype.

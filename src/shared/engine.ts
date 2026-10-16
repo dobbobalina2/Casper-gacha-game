@@ -43,7 +43,7 @@ function isAction(value: unknown): value is Action {
 }
 
 export const RULES = Object.freeze({
-  version: "arena-v1",
+  version: "arena-v2",
   teamSize: 3,
   budget: 14,
   hp: 100,
@@ -53,7 +53,8 @@ export const RULES = Object.freeze({
 });
 export const attackCost = (card: Card): number =>
   Math.max(1, Math.ceil(card.cost / 3));
-export const baseDamage = (card: Card): number => Math.round(card.power / 2000);
+export const baseDamage = (card: Card): number =>
+  12 + Math.round(card.power / 1500);
 export const teamCost = (cards: Card[]): number =>
   cards.reduce((sum, card) => sum + card.cost, 0);
 
@@ -164,7 +165,7 @@ export function damageFor(
     1,
     baseDamage(fighter) + (support?.comboPower ? support.comboPower / 1000 : 0),
   );
-  return Math.max(1, Math.floor(raw * (opponent.guarded ? 0.6 : 1)));
+  return Math.max(1, Math.floor(raw * (opponent.guarded ? 0.75 : 1)));
 }
 
 export function applyAction(
@@ -219,9 +220,11 @@ export function applyAction(
   if (!next.winner) {
     next.turn = enemySide;
     next.move++;
-    enemy.energy = Math.min(RULES.maxEnergy, enemy.energy + 1);
+    enemy.energy = Math.min(RULES.maxEnergy, enemy.energy + 2);
+    const lastStanding =
+      enemy.fighters.filter((fighter) => fighter.hp > 0).length === 1;
     enemy.fighters.forEach((fighter) => {
-      fighter.rest = Math.max(0, fighter.rest - 1);
+      fighter.rest = lastStanding ? 0 : Math.max(0, fighter.rest - 1);
     });
   }
   return next;

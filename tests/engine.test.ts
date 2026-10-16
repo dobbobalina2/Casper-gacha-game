@@ -57,13 +57,13 @@ test("combo uses printed power, consumes energy, rests both cards and does not m
     original = structuredClone(state),
     next = applyAction(state, "player", strike);
   assert.deepEqual(state, original);
-  assert.equal(next.bot.fighters[0].hp, 77);
+  assert.equal(next.bot.fighters[0].hp, 61);
   assert.equal(next.player.energy, 2);
   assert.equal(next.player.fighters[0].rest, 2);
   assert.equal(next.player.fighters[2].rest, 2);
   assert.equal(next.turn, "bot");
   const returned = applyAction(next, "bot", { type: "charge" });
-  assert.equal(returned.player.energy, 3);
+  assert.equal(returned.player.energy, 4);
   assert.equal(returned.player.fighters[0].rest, 1);
   assert.match(
     actionError(returned, "player", { ...strike, support: null })!,
@@ -85,9 +85,9 @@ test("guard reduces only the next hit and energy is capped", () => {
     fighter: "FB01-140",
     target: "FB05-030",
   };
-  assert.equal(damageFor(state, "bot", action), 15);
+  assert.equal(damageFor(state, "bot", action), 33);
   state = applyAction(state, "bot", action);
-  assert.equal(state.player.fighters[0].hp, 85);
+  assert.equal(state.player.fighters[0].hp, 67);
   assert.equal(state.player.guarded, false);
   assert.equal(state.player.energy, 6);
 });
@@ -100,6 +100,7 @@ test("illegal turns, targets, supports and insufficient energy are rejected with
     { ...strike, target: "missing" },
     { ...strike, fighter: "missing" },
     { type: "unknown" },
+    { type: "special", fighter: "FB05-030", target: "FB01-140" },
   ];
   for (const action of invalid)
     assert.throws(() => applyAction(state, "player", action));
@@ -184,19 +185,29 @@ test("bot completes matches legally for every valid roster combination", () => {
   assert.equal(count, 9);
 });
 
-test("v1 recovery advances one rest step even when only one fighter remains", () => {
-  let state = applyAction(create(), "player", { type: "charge" });
-  state.player.fighters[0]!.rest = 2;
+test("last surviving fighter recovers every own turn, including after a teammate knockout", () => {
+  let state = create();
   state.player.fighters[1]!.hp = 0;
-  state.player.fighters[2]!.hp = 0;
-  const next = applyAction(state, "bot", { type: "charge" });
-  assert.equal(next.player.fighters[0]!.rest, 1);
-  assert.equal(next.player.energy, 6);
+  state.player.fighters[2]!.hp = 1;
+  state = applyAction(state, "player", { ...strike, support: null });
+  state = applyAction(state, "bot", {
+    type: "attack",
+    fighter: "FB01-140",
+    target: "FB09-012",
+  });
+  assert.equal(state.player.fighters[0].rest, 0);
+  assert.equal(
+    actionError(state, "player", { ...strike, support: null }),
+    null,
+  );
 });
-test("every ordered lineup pairing resolves under the v1 turn limit", async () => {
+test("every ordered lineup pairing finishes by knockout within 32 turns", async () => {
   const { evaluate } = await import("../scripts/balance.ts");
   const result = evaluate();
   assert.equal(result.matches, 81);
-  assert.ok(result.limitFinishes <= result.matches);
-  assert.ok(result.max! <= 60);
+  assert.equal(result.limitFinishes, 0);
+  assert.ok(result.max! <= 32);
+  assert.ok(result.median! <= 24);
+  assert.ok(result.firstSeatWins / result.matches < 0.6);
+  assert.ok(result.firstSeatWins / result.matches > 0.4);
 });
