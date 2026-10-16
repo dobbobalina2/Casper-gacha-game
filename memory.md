@@ -9,3 +9,7 @@
 - Cancelled animation promises can settle after a new match starts. Guard both the UI continuation and effect cleanup with generation tokens; save combat before presentation begins.
 
 - Collector Crypt gacha inventory is not a sale listing. Use the exact asset page for availability; never label insured value as the purchase price. Preserve opaque inventory cursors unchanged and deduplicate by mint, not card definition.
+
+- Changing database-backed stats can change deterministic replay outcomes. Bind saved matches to the validated catalog revision and retain the lineup when rejecting an outdated match.
+- Wrangler local D1 and remote D1 have separate state. Explicitly verify the database binding and migration target; a successful local migration is not evidence of a remote migration.
+- In this environment Wrangler remote D1 bindings in a local Worker failed with `Network connection lost`, while `wrangler dev --remote` served the same D1 queries successfully. Use the authenticated remote preview for cloud-backed local QA; keep ordinary `npm run dev` local.

@@ -3,27 +3,46 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "description": "Dragon Ball card arena practice prototype",
   "scripts": {
-    "build": "node --import tsx scripts/build.ts",
-    "dev": "npm run build && node --import tsx scripts/serve.ts",
+    "dev": "npm run build && npm run db:migrate && wrangler dev --local",
     "start": "npm run dev",
-    "test": "node --import tsx --test tests/*.test.ts",
-    "check": "tsc --noEmit"
-  },
-  "dependencies": {
-    "react": "^19.3.1",
-    "react-dom": "^19.3.1"
-  },
-  "devDependencies": {
-    "@types/node": "^26.6.5",
-    "@types/react": "^19.3.0",
-    "@types/react-dom": "^19.3.0",
-    "esbuild": "^0.28.2",
-    "tsx": "^4.23.15",
-    "typescript": "^7.0.2"
+    "build": "node --import tsx scripts/build.ts",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\" \"scripts/**/*.ts\" \"tests/**/*.{ts,tsx}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" \"scripts/**/*.ts\" \"tests/**/*.{ts,tsx}\"",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "wrangler d1 migrations apply DB --local",
+    "catalog:prepare": "node --import tsx scripts/prepare-catalog.ts",
+    "db:inspect": "wrangler d1 execute DB --local",
+    "test": "npm run build && node --import tsx --test tests/*.test.ts tests/*.test.tsx",
+    "check": "tsc",
+    "balance": "node --import tsx scripts/balance.ts",
+    "dev:cloud": "npm run build && wrangler dev --remote",
+    "db:migrate:remote": "wrangler d1 migrations apply DB --remote"
   },
   "engines": {
     "node": ">=22"
   },
-  "description": "Dragon Ball card arena practice prototype"
+  "dependencies": {
+    "drizzle-orm": "^0.45.4",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261016.1",
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "drizzle-kit": "^0.31.11",
+    "esbuild": "^0.28.2",
+    "miniflare": "^5.20261012.1-beta",
+    "prettier": "^3.9.10",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.151.1"
+  },
+  "overrides": {
+    "esbuild": "$esbuild"
+  }
 }

@@ -1,6 +1,6 @@
+import { seedCards } from "../scripts/lib/seed-catalog.ts";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import {
   createMatch,
   applyAction,
@@ -8,13 +8,12 @@ import {
   damageFor,
   restoreMatch,
   RULES,
+  type Action,
+  type MatchState,
 } from "../src/shared/engine.ts";
-import type { Card, Replay } from "../src/shared/types.ts";
 import { specialFor, specialCost } from "../src/shared/specials.ts";
-const cards = JSON.parse(
-  readFileSync(new URL("../public/cards.json", import.meta.url), "utf8"),
-) as Card[];
-const bot: string[] = ["FB05-030", "SB02-043", "FB09-012"];
+const cards = seedCards;
+const bot = ["FB05-030", "SB02-043", "FB09-012"];
 const teamFor = (id: string) =>
   [id, ...bot.filter((c) => c !== id)].slice(0, 3);
 function setup(id: string) {
@@ -28,11 +27,7 @@ function setup(id: string) {
   state.player.energy = 6;
   return {
     state,
-    action: {
-      type: "special",
-      fighter: id,
-      target: "FB05-030",
-    } as import("../src/shared/engine.ts").Action,
+    action: { type: "special", fighter: id, target: "FB05-030" } as Action,
   };
 }
 test("each playable card has a distinct special presentation and positive cost", () => {
@@ -57,7 +52,7 @@ test("specials use energy, rest, reject support, and can only be used once", () 
     assert.match(
       actionError(state, "player", {
         ...action,
-        support: state.player.fighters[1]!.id,
+        support: state.player.fighters[1].id,
       })!,
       /cannot use combo/,
     );
@@ -83,14 +78,14 @@ test("Piccolo ignores guard while Kamehameha remains reduced", () => {
 });
 test("Gohan rage and Trunks finisher activate exactly at their thresholds", () => {
   const g = setup("FB01-140");
-  g.state.player.fighters[0]!.hp = 51;
+  g.state.player.fighters[0].hp = 51;
   assert.equal(damageFor(g.state, "player", g.action), 57);
-  g.state.player.fighters[0]!.hp = 50;
+  g.state.player.fighters[0].hp = 50;
   assert.equal(damageFor(g.state, "player", g.action), 75);
   const t = setup("SB02-010");
-  t.state.bot.fighters[0]!.hp = 41;
+  t.state.bot.fighters[0].hp = 41;
   assert.equal(damageFor(t.state, "player", t.action), 27);
-  t.state.bot.fighters[0]!.hp = 40;
+  t.state.bot.fighters[0].hp = 40;
   assert.equal(damageFor(t.state, "player", t.action), 45);
 });
 test("area specials respect guard on splash, clamp HP and win on a multi-knockout", () => {
@@ -100,7 +95,7 @@ test("area specials respect guard on splash, clamp HP and win on a multi-knockou
   ] as [string, number][]) {
     const { state, action } = setup(id);
     state.bot.guarded = true;
-    state.bot.fighters[2]!.hp = 0;
+    state.bot.fighters[2].hp = 0;
     const result = applyAction(state, "player", action);
     assert.equal(result.bot.fighters[1].hp, 100 - Math.floor(splash * 0.75));
     assert.equal(result.bot.fighters[2].hp, 0);
@@ -120,18 +115,13 @@ test("Cheelai refunds energy and guards; Vegito drain is capped before turn rege
 });
 test("special-use history replays exactly and old rules reject safely", () => {
   const ids = ["FB05-030", "SB02-043", "FB01-140"],
-    actions: import("../src/shared/engine.ts").Action[] = [
+    actions: Action[] = [
       { type: "special", fighter: "FB05-030", target: "FB05-030" },
       { type: "charge" },
     ];
   let state = createMatch(ids, bot, cards);
   for (const action of actions) state = applyAction(state, state.turn, action);
-  const save: Replay = {
-    version: RULES.version,
-    playerIds: ids,
-    botIds: bot,
-    actions,
-  };
+  const save = { version: RULES.version, playerIds: ids, botIds: bot, actions };
   assert.deepEqual(restoreMatch(save, cards), state);
   assert.throws(() => restoreMatch({ ...save, version: "arena-v2" }, cards));
 });

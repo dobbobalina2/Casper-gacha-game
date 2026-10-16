@@ -1,28 +1,20 @@
+import { seedCards } from "../scripts/lib/seed-catalog.ts";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import {
   inventoryRequest,
   normalizeInventory,
   createInventoryLoader,
-} from "../scripts/inventory.ts";
+} from "../src/inventory.ts";
 import {
   collectibleUrl,
   definitionFor,
   mergeInventory,
   MARKETPLACE,
 } from "../src/client/collection.ts";
-import {
-  inventoryApiPath,
-  inventoryCodes,
-  inventoryRows,
-} from "../src/client/Collection.tsx";
-import type { Card } from "../src/shared/types.ts";
-import type { InventoryItem } from "../src/client/collection.ts";
-const cards = JSON.parse(
-    readFileSync(new URL("../public/cards.json", import.meta.url), "utf8"),
-  ) as Card[],
-  mint = cards[0]!.collectible.mint;
+import type { InventoryPage } from "../src/contracts/inventory.ts";
+const cards = seedCards,
+  mint = cards[0].collectible.mint;
 const source = new URL(
   "https://gacha.collectorcrypt.com/api/getNfts?code=dragonball_50&limit=24",
 );
@@ -49,8 +41,14 @@ test("inventory accepts only known pools, fixed endpoint and opaque bounded curs
     { url: "https://evil.test" },
     { cursor: "x".repeat(513) },
     { cursor: "a\nb" },
-  ] as Record<string, string>[])
-    assert.throws(() => inventoryRequest(new URLSearchParams(params)));
+  ])
+    assert.throws(() =>
+      inventoryRequest(
+        new URLSearchParams(
+          Object.entries(params).map(([key, value]) => [key, String(value)]),
+        ),
+      ),
+    );
 });
 test("malformed inventory and unsafe links fail closed", () => {
   assert.throws(() => normalizeInventory({ nfts: [], hasMore: true }, source));
@@ -65,7 +63,7 @@ test("malformed inventory and unsafe links fail closed", () => {
     source,
   );
   assert.equal(result.items.length, 1);
-  assert.equal(result.items[0].image, "");
+  assert.equal(result.items[0].image, null);
   assert.equal(collectibleUrl("../bad"), MARKETPLACE);
   assert.equal(
     collectibleUrl(mint),
@@ -74,86 +72,43 @@ test("malformed inventory and unsafe links fail closed", () => {
 });
 test("cache coalesces simultaneous reads and failed reads can be retried", async () => {
   let calls = 0;
-  const load = createInventoryLoader(async () => {
+  const mockPage = { ok: true, json: async () => page } as Response;
+  const load = createInventoryLoader((async () => {
     calls++;
-    return { ok: true, json: async () => page };
-  });
+    return mockPage;
+  }) as typeof fetch);
   await Promise.all([load(new URLSearchParams()), load(new URLSearchParams())]);
   assert.equal(calls, 1);
   let attempt = 0;
-  const retry = createInventoryLoader(async () => {
+  const retry = createInventoryLoader((async () => {
     if (!attempt++) throw new Error("offline");
-    return { ok: true, json: async () => page };
-  });
+    return mockPage;
+  }) as typeof fetch);
   await assert.rejects(retry(new URLSearchParams()));
   assert.equal((await retry(new URLSearchParams())).items.length, 1);
 });
 test("inventory is deduplicated by asset while battle matching requires verified family and number", () => {
-  const item = {
+  const item: InventoryPage["items"][number] = {
     mint: "another",
     name: "2025 #FB02061 Vegito",
     description: "Dragon Ball Super Card Game Fusion World",
-    image: "",
+    image: null,
+    rarity: "unknown",
   };
-  assert.equal(definitionFor(item, cards)!.id, "FB02-061");
+  assert.equal(definitionFor(item, cards)?.id, "FB02-061");
   assert.equal(definitionFor({ ...item, description: "Masters" }, cards), null);
   assert.equal(
     definitionFor(
-      {
-        mint: "marker",
-        name: "Energy Marker E-44",
-        description: "Fusion World",
-        image: "",
-      },
+      { ...item, name: "Energy Marker E-44", description: "Fusion World" },
       cards,
     ),
     null,
   );
   assert.equal(
     mergeInventory(
-      [{ mint: "a", name: "", description: "", image: "" }],
-      [
-        { mint: "a", name: "", description: "", image: "" },
-        { mint: "b", name: "", description: "", image: "" },
-        { mint: "b", name: "", description: "", image: "" },
-      ],
+      [{ mint: "a" }],
+      [{ mint: "a" }, { mint: "b" }, { mint: "b" }],
     ).length,
     2,
   );
-});
-
-test("inventory browser uses the same normalized local proxy for all three pools", () => {
-  assert.deepEqual(inventoryCodes, [
-    "dragonball_50",
-    "dragonball_100",
-    "dragonball_250",
-  ]);
-  for (const code of inventoryCodes) {
-    const url = new URL(
-      inventoryApiPath(code, "opaque+/=token"),
-      "http://127.0.0.1",
-    );
-    assert.equal(url.pathname, "/api/inventory");
-    assert.equal(url.searchParams.get("code"), code);
-    assert.equal(url.searchParams.get("cursor"), "opaque+/=token");
-  }
-});
-test("collection rows retain unmatched collectibles as browse-only items", () => {
-  const known: InventoryItem = {
-    mint,
-    name: "Known Goku",
-    description: "",
-    image: "",
-  };
-  const unknown: InventoryItem = {
-    mint: "another-unmatched-asset",
-    name: "Unverified card",
-    description: "Not a verified Fusion World battle card",
-    image: "",
-  };
-  const rows = inventoryRows([known, unknown], cards);
-  assert.equal(rows.length, 2);
-  assert.equal(rows[0]?.card?.collectible.mint, mint);
-  assert.equal(rows[1]?.card, null);
-  assert.equal(rows[1]?.item.mint, unknown.mint);
 });

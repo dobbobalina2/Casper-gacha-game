@@ -1,5 +1,5 @@
 import type { Side } from "../shared/engine.ts";
-import type { Special } from "../shared/types.ts";
+import type { Special } from "../contracts/catalog.ts";
 
 export type CombatEvent = {
   type: "charge" | "attack" | "special";

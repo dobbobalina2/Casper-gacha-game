@@ -1,6 +1,7 @@
+import { seedCards } from "../scripts/lib/seed-catalog.ts";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, existsSync } from "node:fs";
+import { existsSync } from "node:fs";
 import {
   RULES,
   attackCost,
@@ -11,15 +12,16 @@ import {
   damageFor,
   chooseBotAction,
   restoreMatch,
+  type Action,
+  type ActionInput,
+  type MatchState,
+  type Side,
 } from "../src/shared/engine.ts";
-import type { Card, Replay } from "../src/shared/types.ts";
-const cards = JSON.parse(
-  readFileSync(new URL("../public/cards.json", import.meta.url), "utf8"),
-) as Card[];
-const team: string[] = ["FB05-030", "SB02-043", "FB09-012"];
-const bot: string[] = ["FB01-140", "SB02-043", "FB09-012"];
+const cards = seedCards;
+const team = ["FB05-030", "SB02-043", "FB09-012"];
+const bot = ["FB01-140", "SB02-043", "FB09-012"];
 const create = () => createMatch(team, bot, cards);
-const strike: import("../src/shared/engine.ts").Action = {
+const strike: Action = {
   type: "attack",
   fighter: "FB05-030",
   target: "FB01-140",
@@ -80,7 +82,7 @@ test("combo uses printed power, consumes energy, rests both cards and does not m
 test("guard reduces only the next hit and energy is capped", () => {
   let state = applyAction(create(), "player", { type: "charge" });
   assert.equal(state.player.energy, 6);
-  const action: import("../src/shared/engine.ts").Action = {
+  const action: Action = {
     type: "attack",
     fighter: "FB01-140",
     target: "FB05-030",
@@ -94,13 +96,13 @@ test("guard reduces only the next hit and energy is capped", () => {
 test("illegal turns, targets, supports and insufficient energy are rejected without mutation", () => {
   const state = create();
   const original = structuredClone(state);
-  const invalid: import("../src/shared/engine.ts").ActionInput[] = [
+  const invalid: ActionInput[] = [
     { ...strike, support: "FB05-030" },
     { ...strike, support: "missing" },
     { ...strike, target: "missing" },
     { ...strike, fighter: "missing" },
     { type: "unknown" },
-  ];
+  ] as ActionInput[];
   for (const action of invalid)
     assert.throws(() => applyAction(state, "player", action));
   assert.throws(() => applyAction(state, "bot", { type: "charge" }));
@@ -108,7 +110,7 @@ test("illegal turns, targets, supports and insufficient energy are rejected with
   state.player.energy = 0;
   assert.match(actionError(state, "player", strike)!, /energy/);
   state.player.energy = 6;
-  state.bot.fighters[0]!.hp = 0;
+  state.bot.fighters[0].hp = 0;
   assert.match(actionError(state, "player", strike)!, /standing/);
   const noCombo = createMatch(bot, team, cards);
   assert.match(
@@ -124,28 +126,24 @@ test("illegal turns, targets, supports and insufficient energy are rejected with
 test("knockout ends match, clamps health and prevents further moves", () => {
   const state = create();
   state.bot.fighters.forEach((f) => (f.hp = 0));
-  state.bot.fighters[0]!.hp = 1;
+  state.bot.fighters[0].hp = 1;
   const next = applyAction(state, "player", strike);
   assert.equal(next.bot.fighters[0].hp, 0);
   assert.equal(next.winner, "player");
   assert.throws(() => applyAction(next, "player", { type: "charge" }));
 });
 test("turn limit resolves ties instead of allowing endless charge loops", () => {
-  let state = create();
+  let state: MatchState = create();
   for (let i = 0; i < RULES.turnLimit; i++)
     state = applyAction(state, state.turn, { type: "charge" });
   assert.equal(state.winner, "draw");
   assert.equal(state.move, 60);
 });
 test("saved actions replay exactly; malformed saves fail closed", () => {
-  const actions: import("../src/shared/engine.ts").Action[] = [
-    strike,
-    { type: "charge" },
-    { type: "charge" },
-  ];
-  let state = create();
+  const actions: Action[] = [strike, { type: "charge" }, { type: "charge" }];
+  let state: MatchState = create();
   for (const a of actions) state = applyAction(state, state.turn, a);
-  const save: Replay = {
+  const save = {
     version: RULES.version,
     playerIds: team,
     botIds: bot,
@@ -157,22 +155,42 @@ test("saved actions replay exactly; malformed saves fail closed", () => {
     restoreMatch({ ...save, actions: [null] as never }, cards),
   );
 });
+test("replay revision rejects changed catalogs and pre-database saves", () => {
+  const save = {
+    version: RULES.version,
+    catalogRevision: "revision-a",
+    playerIds: team,
+    botIds: bot,
+    actions: [],
+  };
+  assert.deepEqual(restoreMatch(save, cards, "revision-a"), create());
+  assert.throws(
+    () => restoreMatch(save, cards, "revision-b"),
+    /catalog changed/,
+  );
+  assert.throws(
+    () =>
+      restoreMatch(
+        { ...save, catalogRevision: undefined },
+        cards,
+        "revision-a",
+      ),
+    /catalog changed/,
+  );
+});
 test("bot completes matches legally for every valid roster combination", () => {
   let count = 0;
   for (let i = 0; i < cards.length; i++)
     for (let j = i + 1; j < cards.length; j++)
       for (let k = j + 1; k < cards.length; k++) {
-        const ids = [cards[i]!.id, cards[j]!.id, cards[k]!.id];
+        const ids = [cards[i].id, cards[j].id, cards[k].id];
         if (validateTeam(ids, cards)) continue;
         let state = createMatch(ids, bot, cards);
         while (!state.winner) {
           const action = chooseBotAction(state, state.turn);
           assert.equal(actionError(state, state.turn, action), null);
           state = applyAction(state, state.turn, action);
-          for (const side of [
-            "player",
-            "bot",
-          ] as import("../src/shared/engine.ts").Side[]) {
+          for (const side of ["player", "bot"] as Side[]) {
             assert.ok(state[side].energy >= 0 && state[side].energy <= 6);
             for (const f of state[side].fighters)
               assert.ok(f.hp >= 0 && f.hp <= 100);
@@ -186,8 +204,8 @@ test("bot completes matches legally for every valid roster combination", () => {
 
 test("last surviving fighter recovers every own turn, including after a teammate knockout", () => {
   let state = create();
-  state.player.fighters[1]!.hp = 0;
-  state.player.fighters[2]!.hp = 1;
+  state.player.fighters[1].hp = 0;
+  state.player.fighters[2].hp = 1;
   state = applyAction(state, "player", { ...strike, support: null });
   state = applyAction(state, "bot", {
     type: "attack",

@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import type { Card } from "../../shared/types.ts";
+import type { Card } from "../../contracts/catalog.ts";
 import { RULES, teamCost, validateTeam } from "../../shared/engine.ts";
 import { specialCost } from "../../shared/specials.ts";
 import { collectibleUrl } from "../collection.ts";

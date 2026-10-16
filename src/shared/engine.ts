@@ -1,4 +1,4 @@
-import type { Card, Replay } from "./types.ts";
+import type { Card } from "../contracts/catalog.ts";
 import { specialFor, specialCost } from "./specials.ts";
 
 export type Side = "player" | "bot";
@@ -23,9 +23,19 @@ export type Action =
   | { type: "attack"; fighter: string; target: string; support?: string | null }
   | { type: "special"; fighter: string; target: string };
 export type ActionInput = unknown;
-export type ReplayInput = Omit<Replay, "catalogRevision" | "version"> & {
+export type Replay = {
+  version: typeof RULES.version;
+  catalogRevision: string;
+  playerIds: string[];
+  botIds: string[];
+  actions: Action[];
+};
+export type ReplayInput = {
   version: string;
   catalogRevision?: string;
+  playerIds: string[];
+  botIds: string[];
+  actions: unknown[];
 };
 
 function isAction(value: unknown): value is Action {
@@ -159,10 +169,8 @@ export function damageFor(state: MatchState, side: Side, action: Action) {
   const target = opponent.fighters.find((f) => f.id === action.target)!;
   const bonus = special
     ? special.bonus +
-      (special.rage && fighter.hp <= (special.rageThreshold ?? 50)
-        ? special.rage
-        : 0) +
-      (special.execute && target.hp <= (special.executeThreshold ?? 40)
+      (special.rage && fighter.hp <= special.rageThreshold ? special.rage : 0) +
+      (special.execute && target.hp <= special.executeThreshold
         ? special.execute
         : 0)
     : 0;

@@ -1,6 +1,6 @@
 # Arena v3 — signature moves and Collector Crypt browsing
 
-Implemented October 16, 2026. Builds on [v2 pacing](arena-v2.md), with eight verified fighters and one special per card per match. All special mechanics below are Casper adaptations inspired by characters, not official printed card skills.
+Implemented October 16, 2026. Data storage and serving are now superseded by [the D1 architecture](database.md). Builds on [v2 pacing](arena-v2.md), with eight verified fighters and one special per card per match. All special mechanics below are Casper adaptations inspired by characters, not official printed card skills.
 
 ## Signature attacks
 
