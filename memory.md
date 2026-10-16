@@ -18,3 +18,5 @@
 - Better Auth with Drizzle D1 requires `transaction: false`, `nodejs_compat`, and the complete core schema, including an ID and unique key on the database rate-limit table. Test the OAuth callback in the Worker runtime, not just URL generation.
 
 - A timed-out save can still commit to D1. If later local actions are queued, retrying with the last acknowledged revision produces a false conflict. Recover by reading the cloud replay and rebasing once only when its complete history, teams and catalog are a prefix of the local replay. Never treat all 409 responses as permission to overwrite. Verify with a real proxy interruption as well as mocked failures.
+
+- Never put secret search values in child-process arguments: execution errors can echo the full command. Feed patterns through stdin, use non-throwing status handling for expected no-match results, and report only counts/redacted diagnostics.

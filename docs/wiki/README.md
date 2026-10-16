@@ -1,6 +1,7 @@
 # Casper project wiki
 
 - [Public deployment and Google production setup](deployment.md)
+- [Security review and client/server boundary](../../security_best_practices_report.md)
 - [Project overview](../../README.md)
 - [Product direction and open decisions](../product-brief.md)
 - [Collector Crypt API research and live inventory check](collector-crypt.md)
