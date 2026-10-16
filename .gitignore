@@ -3,6 +3,7 @@
 .env.*
 !.env.example
 node_modules/
+/public/bundle.js
 dist/
 coverage/
 .venv/

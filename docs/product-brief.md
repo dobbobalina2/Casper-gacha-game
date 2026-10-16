@@ -7,15 +7,15 @@
 - Collection: Dragon Ball, using actual Collector Crypt collectibles through their API.
 - Investigate the cards' existing gameplay stats as the basis for combat.
 
-## Proposed first playable
+## First playable
 
 Three fighters per side in a short turn-based match against a bot. Players choose when to attack, commit a supporting card to a combo, or recover energy. Target two to three minutes per match, subject to playtesting.
 
-Use verified official power, combo power, and cost as inputs. Casper's energy economy, damage calculation, victory condition, and support cooldowns are custom rules still to design. Avoid automatic wins from simply selecting the highest printed power; test a team cost budget and meaningful costs for supporting attacks.
+The implemented v1 uses verified official power, combo power, and cost as inputs, with custom energy, damage, victory, and recovery rules. See [the exact rules and verification](wiki/arena-v1.md). A team cost budget and support costs are implemented; competitive balance is not established.
 
-Start with a small, verified Fusion World roster. This is a recommendation based on the inventory sample, not a decision to support every Dragon Ball card family. See [stat research](wiki/dragon-ball-arena.md).
+The first roster contains six verified Fusion World definitions. Other Dragon Ball card families are not supported. See [stat research](wiki/dragon-ball-arena.md).
 
-Practice cards can represent real catalog entries without granting ownership; label that mode clearly. Actual collection-based play must verify holdings before team selection. Ownership verification has not been implemented.
+Practice cards represent real catalog entries without granting ownership, and the interface labels this mode explicitly. Actual collection-based play must verify holdings before team selection. Ownership verification has not been implemented.
 
 ## Data responsibilities
 
@@ -27,8 +27,7 @@ Keep these records separate. Collectible grade, price, and gacha prize tier do n
 
 ## Open design decisions
 
-- Exact turn sequence, energy rules, damage calculation, and victory condition.
-- Team budget and duplicate-card policy.
+- Balance and pacing adjustments to the implemented v1 rules.
 - Which printed abilities can be adapted coherently to three-card play.
 - Practice access and how verified ownership affects competitive access.
 - Multiplayer and pack purchasing scope after the battle prototype.
@@ -43,4 +42,4 @@ Keep these records separate. Collectible grade, price, and gacha prize tier do n
 
 ## Current status
 
-Concept and collection selected. Twelve Dragon Ball inventory records inspected; one card definition matched to official stats. No application, battle engine, authenticated integration, or deployment exists yet.
+A local browser prototype implements lineup selection, bot battles, card source details, rematches, and replay-based refresh recovery. Six card definitions were matched to official stats using two bounded inventory samples. There is no authenticated ownership integration, pack purchasing, multiplayer, or hosted deployment.
