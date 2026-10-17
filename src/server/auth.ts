@@ -60,6 +60,7 @@ export function createAuth(env: AuthEnv) {
     },
     rateLimit: { enabled: true, storage: "database", window: 60, max: 60 },
     advanced: {
+      ipAddress: { ipAddressHeaders: ["cf-connecting-ip"] },
       cookiePrefix: "casper",
       useSecureCookies: config.BETTER_AUTH_URL.startsWith("https:"),
       defaultCookieAttributes: { httpOnly: true, sameSite: "lax" },

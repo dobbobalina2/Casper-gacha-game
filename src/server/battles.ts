@@ -1,11 +1,12 @@
+import { enforceLimit } from "./rate-limits.ts";
 import { and, desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
-import { restoreMatch } from "./shared/engine.ts";
+import { restoreMatch } from "../shared/engine.ts";
 import {
   battleSchema,
   battleSummarySchema,
   saveBattleSchema,
-} from "./contracts/battles.ts";
+} from "../shared/contracts/battles.ts";
 import { battles } from "./db/battle-schema.ts";
 import { readCatalog } from "./db/catalog.ts";
 
@@ -61,6 +62,7 @@ export async function saveBattle(
   userId: string,
   id: string,
   input: unknown,
+  newBattleLimiter: RateLimit,
 ) {
   const { revision, replay } = saveBattleSchema.parse(input);
   const db = drizzle(binding);
@@ -92,6 +94,8 @@ export async function saveBattle(
     }
   }
 
+  if (!previous) await enforceLimit(newBattleLimiter, userId);
+
   // The server supplies the immutable stat snapshot; clients can only submit legal actions.
   const catalog = previous
     ? { cards: previous.catalog, revision: previous.replay.catalogRevision }
@@ -117,17 +121,32 @@ export async function saveBattle(
     moves: replay.actions.length,
     updatedAt: Date.now(),
   };
-  const rows = previous
-    ? await db
-        .update(battles)
-        .set(values)
-        .where(and(identity, eq(battles.revision, revision)))
-        .returning()
-    : await db
-        .insert(battles)
-        .values({ ...values, userId, id, createdAt: Date.now() })
-        .onConflictDoNothing()
-        .returning();
+  let rows;
+  try {
+    rows = previous
+      ? await db
+          .update(battles)
+          .set(values)
+          .where(and(identity, eq(battles.revision, revision)))
+          .returning()
+      : await db
+          .insert(battles)
+          .values({ ...values, userId, id, createdAt: Date.now() })
+          .onConflictDoNothing()
+          .returning();
+  } catch (error) {
+    // Drizzle wraps D1 errors; inspect only the known trigger sentinel.
+    let cause: unknown = error;
+    for (let depth = 0; depth < 5 && cause instanceof Error; depth++) {
+      if (cause.message.includes("casper_battle_quota"))
+        throw new BattleError(
+          507,
+          "Cloud storage is full (200 battles). Existing battles can still be resumed. This battle is backed up in this browser.",
+        );
+      cause = cause.cause;
+    }
+    throw error;
+  }
   if (!rows[0])
     throw new BattleError(
       409,

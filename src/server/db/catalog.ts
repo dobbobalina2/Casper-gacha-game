@@ -1,6 +1,6 @@
 import { asc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
-import { catalogSchema } from "../contracts/catalog.ts";
+import { catalogSchema } from "../../shared/contracts/catalog.ts";
 import { cardDefinitions, collectibles, specialAttacks } from "./schema.ts";
 
 export async function readCatalog(binding: D1Database) {

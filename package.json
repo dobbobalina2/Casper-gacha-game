@@ -17,9 +17,10 @@
     "test": "npm run build && node --import tsx --test tests/*.test.ts tests/*.test.tsx",
     "check": "tsc",
     "balance": "node --import tsx scripts/balance.ts",
-    "dev:cloud": "npm run build && wrangler dev --remote",
-    "deploy": "npm run build && wrangler deploy",
-    "db:migrate:remote": "wrangler d1 migrations apply DB --remote"
+    "dev:cloud": "npm run build && wrangler dev --remote --env staging",
+    "deploy": "npm run build && wrangler deploy --env=\"\"",
+    "db:migrate:staging": "wrangler d1 migrations apply DB --remote --env staging",
+    "db:migrate:production": "wrangler d1 migrations apply DB --remote --env=\"\""
   },
   "engines": {
     "node": ">=22"

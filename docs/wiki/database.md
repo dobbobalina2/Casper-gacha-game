@@ -28,14 +28,15 @@ Dedicated Cloudflare database: `casper-arena`, ID `ae7529d3-093b-47cf-9ffc-30c71
 ```sh
 npm ci
 npm run dev         # Build, migrate a local D1 copy, start localhost:4317
-npm run dev:cloud   # Authenticated Cloudflare preview and real D1; requires Wrangler login
+npm run dev:cloud   # Authenticated preview and isolated staging D1; requires Wrangler login
 ```
 
-Local and cloud databases are separate. Local migrations do not change cloud data. `dev:cloud` also writes the bounded inventory cache to the remote Casper database. The cloud command uploads the Worker and static assets to an authenticated development preview, proxied through localhost; it does not publish a production website.
+Local, staging and production databases are separate. Local migrations do not change cloud data. `dev:cloud` writes only to `casper-arena-staging` (ID `14b9fd72-434a-492f-922a-0250b2641304`), including its bounded inventory cache. Staging was initialized from catalog migrations without copying production accounts or battles. The cloud command uploads the Worker and static assets to an authenticated development preview, proxied through localhost; it does not publish a production website.
 
 ```sh
 npm run db:migrate          # Apply pending migrations locally
-npm run db:migrate:remote   # Apply reviewed migrations to Casper in Cloudflare
+npm run db:migrate:staging   # Apply reviewed migrations to staging
+npm run db:migrate:production # Apply reviewed migrations to production
 npm run db:inspect -- --command 'SELECT id, power, cost FROM card_definitions'
 ```
 
@@ -54,13 +55,13 @@ npm run check
 
 The prepare command validates the entire input before writing anything, refuses to overwrite an existing output file, and uses Drizzle's column mappings to generate escaped upserts. It retains omitted existing cards: deletion requires a separate explicit reviewed migration. Use a fresh increasing migration prefix. Keep the complete roster order in the input. For schema changes, use `npm run db:generate`; if a manual data migration already occupies its generated numeric prefix, give the new schema migration a unique higher filename before applying. Wrangler records applied SQL filenames in `d1_migrations`; Drizzle's metadata describes schema snapshots.
 
-Review the resulting SQL, verify provenance and mechanics, and then apply the same migration remotely. Schema changes belong in `src/db/schema.ts`; runtime and import validation lives in `src/contracts/`. If a catalog update changes balance, update the test fixture, wiki and balance report with that change. Do not silently regenerate the initial seed migration.
+Review the resulting SQL, verify provenance and mechanics, and then apply the same migration remotely. Schema changes belong in `src/server/db/schema.ts`; runtime and import validation lives in `src/shared/contracts/`. If a catalog update changes balance, update the test fixture, wiki and balance report with that change. Do not silently regenerate the initial seed migration.
 
 To roll back a data mistake, create a new validated migration restoring the previous values. Do not delete local state or drop the remote database as a rollback shortcut.
 
 ## Verification
 
-`npm test` builds the bundles and runs combat, presentation, inventory, and isolated local D1 integration tests. D1 tests apply all migrations to a fresh database, compare every stat and special against the sourced seed, verify upsert idempotency, foreign keys, rollback, live API changes, revision changes, invalid-row rejection, quoted text, cache expiry and cache bounds. `npm run check` runs strict TypeScript checks for the backend, contracts, schema and import tooling plus frontend syntax checks. `npm run balance` reproduces the seed catalog baseline.
+`npm test` builds the bundles and runs combat, presentation, inventory, and isolated local D1 integration tests. D1 tests apply all migrations to a fresh database, compare every stat and special against the sourced seed, verify upsert idempotency, foreign keys, rollback, live API changes, revision changes, invalid-row rejection, quoted text, cache expiry and cache bounds. `npm run check` runs strict TypeScript checks for all React components, client services, the shared engine, backend, contracts, schema, tests and import tooling. `npm run balance` reproduces the seed catalog baseline.
 
 Official implementation references: [Drizzle D1 adapter](https://orm.drizzle.team/docs/sqlite/connect-cloudflare-d1), [D1 local development](https://developers.cloudflare.com/d1/best-practices/local-development/), [Zod validation](https://zod.dev/basics).
 

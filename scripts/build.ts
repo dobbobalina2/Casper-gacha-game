@@ -17,7 +17,7 @@ await build({
 });
 // This bundle also powers integration tests in the real local D1 runtime.
 await build({
-  entryPoints: ["src/worker.ts"],
+  entryPoints: ["src/server/worker.ts"],
   outfile: "dist/worker.js",
   bundle: true,
   format: "esm",

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { saveWithRecovery } from "../src/client/battle-sync.ts";
-import type { Replay } from "../src/contracts/battles.ts";
+import type { Replay } from "../src/shared/contracts/battles.ts";
 
 const replay: Replay = {
   version: "arena-v3",

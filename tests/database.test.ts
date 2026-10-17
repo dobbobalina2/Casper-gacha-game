@@ -1,3 +1,4 @@
+import { testRateLimits } from "./helpers/rate-limits.ts";
 import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
@@ -9,8 +10,8 @@ import {
 import {
   catalogResponseSchema,
   catalogSchema,
-} from "../src/contracts/catalog.ts";
-import { createInventoryLoader } from "../src/inventory.ts";
+} from "../src/shared/contracts/catalog.ts";
+import { createInventoryLoader } from "../src/server/inventory.ts";
 import { seedCards } from "../scripts/lib/seed-catalog.ts";
 import { catalogSql } from "../scripts/prepare-catalog.ts";
 
@@ -36,6 +37,7 @@ before(async () => {
   runtime = new Miniflare(
     convertV4MiniflareOptions({
       modules: true,
+      ratelimits: testRateLimits,
       scriptPath: "dist/worker.js",
       compatibilityDate: "2026-10-01",
       compatibilityFlags: ["nodejs_compat"],

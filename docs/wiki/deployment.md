@@ -1,18 +1,19 @@
 # Public deployment
 
-Casper is hosted at https://casper-gacha-game.jfkiii.workers.dev. The private source repository is https://github.com/dobbobalina2/Casper-gacha-game on `main`.
+Casper is hosted at https://casper-gacha-game.jfkiii.workers.dev. The source repository is https://github.com/dobbobalina2/Casper-gacha-game on `main`.
 
 ## Runtime and updates
 
-Cloudflare Worker `casper-gacha-game` serves the built static assets and API using the existing dedicated `casper-arena` D1 database. Production and `dev:cloud` share that database, including account and battle records; local development uses its separate local D1 copy. Do not use destructive test fixtures against the shared cloud database.
+Cloudflare Worker `casper-gacha-game` serves the built static assets and API using the existing dedicated `casper-arena` D1 database. Production exclusively uses that database. `dev:cloud` selects `--env staging`, with a separate `casper-arena-staging` D1 database, independent rate-limit namespaces and `.dev.vars.staging` auth key. Local development has its own D1 copy and key. Staging disables public workers.dev and version-preview routes. Never copy production users or sessions into test fixtures.
 
-`wrangler.jsonc` sets the public HTTPS `BETTER_AUTH_URL`, enables the stable workers.dev route, and disables version preview URLs. Local `.dev.vars` overrides the base URL for development. Credentials and generated build files are excluded from Git.
+`wrangler.jsonc` sets the public HTTPS `BETTER_AUTH_URL`, enables the stable workers.dev route, and disables version preview URLs. Local `.dev.vars` and cloud-preview `.dev.vars.staging` use the localhost base URL and different development keys. Credentials and generated build files are excluded from Git.
 
 ```sh
 npm ci
 npm run check
 npm test
-npm run db:migrate:remote  # Only after reviewing pending migrations
+npm run db:migrate:staging    # Verify new migrations on staging first
+npm run db:migrate:production # Only after tests and migration review
 npm run deploy            # Build assets, then deploy Worker and assets
 ```
 
@@ -20,7 +21,7 @@ Deployments are manual; pushing to GitHub does not deploy automatically. D1 migr
 
 ## Production Google login
 
-The existing `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`, and `GOOGLE_CLIENT_SECRET` were uploaded as Cloudflare Worker secrets with explicit user approval. Preserve the existing Better Auth secret because the shared D1 provider tokens are encrypted with it. Do not put secret values in Wrangler configuration, Git, browser assets, or documentation.
+The existing `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`, and `GOOGLE_CLIENT_SECRET` were uploaded as Cloudflare Worker secrets with explicit user approval. Preserve the existing Better Auth secret because production D1 provider tokens are encrypted with it. Do not put secret values in Wrangler configuration, Git, browser assets, or documentation.
 
 The following entries were saved in the existing Casper Google OAuth Web application client with user approval; local entries were preserved:
 
@@ -42,3 +43,7 @@ The Google Auth Platform audience was verified as External and In production. No
 - The initial 11-commit Git history was scanned for both configured secret values; no matches or tracked secret/generated directories were found. GitHub repository is private.
 
 Full gameplay/account regression evidence from before deployment is in [feature QA](feature-qa-2026-10-16.md). No game logic changed during deployment.
+
+## Security release
+
+The subsequent hardening release separates staging from production, adds edge limits and the database battle quota, and deploys CSP/security headers. Source now lives under `src/client`, `src/shared` and `src/server`; only static assets and headers live in `public`. See [the release verification and remaining limitations](security-hardening.md). The source repository is published publicly after the security checks; secrets and player data remain outside Git.

@@ -1,6 +1,7 @@
 # Casper project wiki
 
 - [Public deployment and Google production setup](deployment.md)
+- [Security hardening and source layout](security-hardening.md): API limits, atomic storage quota, isolated staging, CSP, and release verification.
 - [Security review and client/server boundary](../../security_best_practices_report.md)
 - [Project overview](../../README.md)
 - [Product direction and open decisions](../product-brief.md)

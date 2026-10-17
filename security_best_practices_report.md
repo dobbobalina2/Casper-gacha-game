@@ -2,6 +2,8 @@
 
 > Historical record: this review describes the original deployment before the React/TypeScript history reconstruction. Its commit IDs, line numbers, source paths, and live observations refer to the original history retained in the local backup; they are not fresh verification of reconstructed commits.
 
+**Remediation update:** Findings 2–4 and the source-folder cleanup are implemented and deployed. See [security hardening](docs/wiki/security-hardening.md) for controls, verification and limits. Finding 1 (production credential rotation) remains open. The original review below retains its commit-specific paths and evidence.
+
 Reviewed commit `2d62561` and the live HTTPS deployment. This was a bounded source/configuration review with non-destructive HTTP checks, dependency audit, secret scanning, and 21 isolated integration/client tests. No application code or production settings were changed. No load testing or account-data extraction was performed.
 
 The reviewed paths did not reveal an authentication bypass, cross-user battle access, deployed server-source exposure, or browser-bundled credentials. There is one high-priority credential-handling issue, two medium-priority operational/abuse issues, and one low-priority browser-hardening issue. This is not a comprehensive penetration test or a guarantee of security.
@@ -75,4 +77,4 @@ The replay validator accepts legal actions for both teams (`public/engine.js:275
 - Account names and inventory text are HTML-escaped in reviewed rendering paths. IDs/local artwork paths/colors are restricted by schemas; external collectible images use an HTTPS host allowlist. No working attacker-controlled HTML/script injection path was established.
 - No private player data, real cookies or token values were copied into this report. Live attack-volume behavior, Cloudflare account permissions, and exhaustive third-party internals were outside scope.
 
-Recommended order: rotate exposed credentials carefully; add API quotas/limits and environment isolation; apply browser headers; then clean up the source layout. Findings remain open—this commit records the review, not fixes.
+Recommended order: rotate exposed credentials carefully; add API quotas/limits and environment isolation; apply browser headers; then clean up the source layout. This original review recorded findings before remediation; current status is documented at the top of this file.

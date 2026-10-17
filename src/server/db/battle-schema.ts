@@ -8,8 +8,8 @@ import {
   text,
 } from "drizzle-orm/sqlite-core";
 import { user } from "./auth-schema.ts";
-import type { Replay } from "../contracts/battles.ts";
-import type { Card } from "../contracts/catalog.ts";
+import type { Replay } from "../../shared/contracts/battles.ts";
+import type { Card } from "../../shared/contracts/catalog.ts";
 
 export const battles = sqliteTable(
   "battles",

@@ -1,12 +1,12 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { drizzle } from "drizzle-orm/d1";
-import { catalogSchema } from "../src/contracts/catalog.ts";
+import { catalogSchema } from "../src/shared/contracts/catalog.ts";
 import {
   cardDefinitions,
   collectibles,
   specialAttacks,
-} from "../src/db/schema.ts";
+} from "../src/server/db/schema.ts";
 
 // Generate reviewed data migrations with Drizzle's column mappings and Zod validation.
 // No DB connection is made and no remote write is performed by this command.

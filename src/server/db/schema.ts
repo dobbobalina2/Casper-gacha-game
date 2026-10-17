@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { check, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import type { Special } from "../contracts/catalog.ts";
-import type { InventoryPage } from "../contracts/inventory.ts";
+import type { Special } from "../../shared/contracts/catalog.ts";
+import type { InventoryPage } from "../../shared/contracts/inventory.ts";
 
 export const collectibles = sqliteTable("collectibles", {
   mint: text("mint").primaryKey(),

@@ -1,5 +1,5 @@
-import type { Card } from "../contracts/catalog.ts";
-import type { Replay } from "../contracts/battles.ts";
+import type { Card } from "./contracts/catalog.ts";
+import type { Replay } from "./contracts/battles.ts";
 import { specialFor, specialCost } from "./specials.ts";
 
 export type Side = "player" | "bot";

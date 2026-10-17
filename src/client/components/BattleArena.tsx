@@ -300,7 +300,7 @@ export function BattleArena({
               disabled={!mine || !!specialError}
               onClick={() => act(special)}
             >
-              {fighter?.special.name ?? "No ready fighter"}
+              {fighter?.special.name ?? "No ready fighter"}{" "}
               <span>{fighter ? specialCost(fighter) : "—"} energy</span>
             </button>
             <p>{fighter?.special.description ?? "Choose a ready fighter."}</p>

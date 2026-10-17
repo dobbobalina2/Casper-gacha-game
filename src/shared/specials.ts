@@ -1,4 +1,4 @@
-import type { Card, Special } from "../contracts/catalog.ts";
+import type { Card, Special } from "./contracts/catalog.ts";
 
 // Special definitions arrive with each validated database card.
 export const specialFor = (card: Card | null | undefined): Special | null =>

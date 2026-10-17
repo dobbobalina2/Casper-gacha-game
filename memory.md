@@ -20,3 +20,8 @@
 - A timed-out save can still commit to D1. If later local actions are queued, retrying with the last acknowledged revision produces a false conflict. Recover by reading the cloud replay and rebasing once only when its complete history, teams and catalog are a prefix of the local replay. Never treat all 409 responses as permission to overwrite. Verify with a real proxy interruption as well as mocked failures.
 
 - Never put secret search values in child-process arguments: execution errors can echo the full command. Feed patterns through stdin, use non-throwing status handling for expected no-match results, and report only counts/redacted diagnostics.
+
+- Cloudflare rate-limit namespaces are shared by ID and enforced per location. Give staging distinct IDs; use a D1 trigger for the strict per-account storage cap. A select/count followed by insert alone races under concurrent requests.
+- A storage-quota failure must pause only the rejected new save, not stop the whole browser queue. Avoid opening an empty drain promise for paused records: a same-tick enqueue could otherwise miss its flush.
+
+- React effect cleanup must dispose the account service before asynchronous initialization completes; otherwise Strict Mode remounts can start duplicate save queues. Preserve captured account headers on retries and invalidate late history responses when the dialog closes.

@@ -5,8 +5,8 @@ import {
   battleSummarySchema,
   replaySchema,
   type Replay,
-} from "../contracts/battles.ts";
-import { catalogSchema, type Card } from "../contracts/catalog.ts";
+} from "../shared/contracts/battles.ts";
+import { catalogSchema, type Card } from "../shared/contracts/catalog.ts";
 import { createSaveQueue } from "./save-queue.ts";
 import { saveWithRecovery } from "./battle-sync.ts";
 

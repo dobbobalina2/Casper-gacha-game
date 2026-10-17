@@ -6,7 +6,7 @@ import {
   type LocalSave,
 } from "../src/client/account.ts";
 import { seedCards } from "../scripts/lib/seed-catalog.ts";
-import type { Replay } from "../src/contracts/battles.ts";
+import type { Replay } from "../src/shared/contracts/battles.ts";
 
 class Storage {
   data = new Map<string, string>();
@@ -270,7 +270,12 @@ test("disposing while an auth action is pending suppresses its late rejection", 
   const app = fixture({ id: "alice", name: "Alice" });
   await app.account.init();
   let rejectRequest: ((error: Error) => void) | undefined;
-  app.setFetch(async () => new Promise<Response>((_resolve, reject) => { rejectRequest = reject; }));
+  app.setFetch(
+    async () =>
+      new Promise<Response>((_resolve, reject) => {
+        rejectRequest = reject;
+      }),
+  );
   const signOut = app.account.action("logout");
   await Promise.resolve();
   app.account.dispose();

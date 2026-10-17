@@ -5,14 +5,14 @@ import {
   inventoryRequest,
   normalizeInventory,
   createInventoryLoader,
-} from "../src/inventory.ts";
+} from "../src/server/inventory.ts";
 import {
   collectibleUrl,
   definitionFor,
   mergeInventory,
   MARKETPLACE,
 } from "../src/client/collection.ts";
-import type { InventoryPage } from "../src/contracts/inventory.ts";
+import type { InventoryPage } from "../src/shared/contracts/inventory.ts";
 const cards = seedCards,
   mint = cards[0].collectible.mint;
 const source = new URL(

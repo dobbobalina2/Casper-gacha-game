@@ -1,3 +1,4 @@
+import { testRateLimits } from "./helpers/rate-limits.ts";
 import { before, after, test } from "node:test";
 import assert from "node:assert/strict";
 import { generateKeyPairSync, randomUUID, sign } from "node:crypto";
@@ -7,13 +8,13 @@ import {
   convertV4MiniflareOptions,
   Response as RuntimeResponse,
 } from "miniflare";
-import { catalogResponseSchema } from "../src/contracts/catalog.ts";
+import { catalogResponseSchema } from "../src/shared/contracts/catalog.ts";
 import {
   battleSchema,
   battleSummarySchema,
   replaySchema,
   type Replay,
-} from "../src/contracts/battles.ts";
+} from "../src/shared/contracts/battles.ts";
 import {
   applyAction,
   chooseBotAction,
@@ -57,6 +58,7 @@ function jwt(name: string) {
   const data = parts.join(".");
   return `${data}.${sign("RSA-SHA256", Buffer.from(data), privateKey).toString("base64url")}`;
 }
+let loginIp = 0;
 async function call(
   path: string,
   identity?: Identity,
@@ -69,6 +71,7 @@ async function call(
     redirect: "manual",
     headers: {
       Origin: origin,
+      "CF-Connecting-IP": `192.0.2.${loginIp}`,
       "Content-Type": "application/json",
       ...(identity
         ? { Cookie: identity.cookie, "X-Casper-User": identity.id }
@@ -79,6 +82,7 @@ async function call(
   });
 }
 async function login(name: string) {
+  loginIp++;
   const start = await call("/api/auth/sign-in/social", undefined, "POST", {
     provider: "google",
     callbackURL: origin + "/",
@@ -134,6 +138,17 @@ before(async () => {
   runtime = new Miniflare(
     convertV4MiniflareOptions({
       modules: true,
+      ratelimits: {
+        ...testRateLimits,
+        NEW_BATTLE_LIMITER: {
+          namespace_id: "7003",
+          simple: { limit: 10, period: 60 },
+        },
+        BATTLE_WRITE_LIMITER: {
+          namespace_id: "7002",
+          simple: { limit: 90, period: 60 },
+        },
+      },
       scriptPath: "dist/worker.js",
       compatibilityDate: "2026-10-01",
       compatibilityFlags: ["nodejs_compat"],
@@ -327,6 +342,119 @@ test("a finished replay is classified by the server and can be revisited", async
   const saved = battleSummarySchema.parse(await response.json());
   assert.equal(saved.status, "completed");
   assert.equal(saved.result, state.winner);
+});
+
+test("new battles and writes are limited per account with retry guidance", async () => {
+  const limited = await login("limited");
+  const ids = Array.from({ length: 11 }, () => randomUUID());
+  for (let i = 0; i < ids.length; i++) {
+    const response = await call(`/api/battles/${ids[i]}`, limited, "PUT", {
+      revision: 0,
+      replay: initial,
+    });
+    assert.equal(
+      response.status,
+      i < 10 ? 200 : 429,
+      await response.clone().text(),
+    );
+    if (i === 10) assert.equal(response.headers.get("retry-after"), "60");
+  }
+  // Retrying an existing save does not consume the new-battle allowance.
+  for (let i = 11; i < 90; i++)
+    assert.equal(
+      (
+        await call(`/api/battles/${ids[0]}`, limited, "PUT", {
+          revision: 0,
+          replay: initial,
+        })
+      ).status,
+      200,
+    );
+  assert.equal(
+    (
+      await call(`/api/battles/${ids[0]}`, limited, "PUT", {
+        revision: 0,
+        replay: initial,
+      })
+    ).status,
+    429,
+  );
+  assert.equal(
+    (
+      await call(`/api/battles/${randomUUID()}`, bob, "PUT", {
+        revision: 0,
+        replay: initial,
+      })
+    ).status,
+    200,
+  );
+});
+
+test("atomic quota stops concurrent new saves without blocking existing battles or other accounts", async () => {
+  const full = await login("quota");
+  const seedId = randomUUID();
+  assert.equal(
+    (
+      await call(`/api/battles/${seedId}`, full, "PUT", {
+        revision: 0,
+        replay: initial,
+      })
+    ).status,
+    200,
+  );
+  await db.batch(
+    Array.from({ length: 198 }, () =>
+      db
+        .prepare(
+          "INSERT INTO battles SELECT user_id, ?, revision, replay, catalog, status, result, moves, created_at, updated_at FROM battles WHERE user_id = ? AND id = ?",
+        )
+        .bind(randomUUID(), full.id, seedId),
+    ),
+  );
+  const responses = await Promise.all(
+    [randomUUID(), randomUUID()].map((id) =>
+      call(`/api/battles/${id}`, full, "PUT", { revision: 0, replay: initial }),
+    ),
+  );
+  assert.deepEqual(responses.map((r) => r.status).sort(), [200, 507]);
+  assert.match(
+    await responses.find((r) => r.status === 507)!.text(),
+    /200 battles/,
+  );
+  assert.equal(
+    (await db
+      .prepare("SELECT count(*) AS n FROM battles WHERE user_id = ?")
+      .bind(full.id)
+      .first<{ n: number }>())!.n,
+    200,
+  );
+  assert.equal(
+    (
+      await call(`/api/battles/${seedId}`, full, "PUT", {
+        revision: 0,
+        replay: initial,
+      })
+    ).status,
+    200,
+  );
+  assert.equal(
+    (
+      await call(`/api/battles/${seedId}`, full, "PUT", {
+        revision: 1,
+        replay: { ...initial, actions: [{ type: "charge" }] },
+      })
+    ).status,
+    200,
+  );
+  assert.equal(
+    (
+      await call(`/api/battles/${randomUUID()}`, bob, "PUT", {
+        revision: 0,
+        replay: initial,
+      })
+    ).status,
+    200,
+  );
 });
 test("sign-out revokes session immediately, including pending saves", async () => {
   assert.equal((await call("/api/auth/sign-out", bob, "POST", {})).status, 200);

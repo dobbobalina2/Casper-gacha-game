@@ -1,13 +1,16 @@
 import { z } from "zod";
 import { desc, eq, lte, notInArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
-import { collectibleImageSchema, mintSchema } from "./contracts/catalog.ts";
+import {
+  collectibleImageSchema,
+  mintSchema,
+} from "../shared/contracts/catalog.ts";
 import {
   cursorSchema,
   inventoryPageSchema,
   inventoryQuerySchema,
-} from "./contracts/inventory.ts";
-import type { InventoryPage } from "./contracts/inventory.ts";
+} from "../shared/contracts/inventory.ts";
+import type { InventoryPage } from "../shared/contracts/inventory.ts";
 import { inventoryPages } from "./db/schema.ts";
 
 const upstreamSchema = z.object({

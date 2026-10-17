@@ -1,4 +1,4 @@
-import type { Replay } from "../contracts/battles.ts";
+import type { Replay } from "../shared/contracts/battles.ts";
 import type { SaveRecord } from "./save-queue.ts";
 
 export type SyncedBattle = { revision: number; replay: Replay };
@@ -8,7 +8,10 @@ export type SyncConflict = Error & { status?: number };
 // server's entire history is already present in this local replay.
 export async function saveWithRecovery<T extends { revision: number }>(
   record: Pick<SaveRecord, "revision" | "replay">,
-  { put, get }: {
+  {
+    put,
+    get,
+  }: {
     put(revision: number): Promise<T>;
     get(): Promise<SyncedBattle>;
   },
@@ -21,11 +24,13 @@ export async function saveWithRecovery<T extends { revision: number }>(
     const saved = await get();
     const remote = saved.replay;
     const local = record.replay;
-    const sameHistory = remote.version === local.version &&
+    const sameHistory =
+      remote.version === local.version &&
       remote.catalogRevision === local.catalogRevision &&
       JSON.stringify(remote.playerIds) === JSON.stringify(local.playerIds) &&
       JSON.stringify(remote.botIds) === JSON.stringify(local.botIds) &&
-      JSON.stringify(remote.actions) === JSON.stringify(local.actions.slice(0, remote.actions.length));
+      JSON.stringify(remote.actions) ===
+        JSON.stringify(local.actions.slice(0, remote.actions.length));
     if (saved.revision <= record.revision || !sameHistory) throw caught;
     return put(saved.revision);
   }
